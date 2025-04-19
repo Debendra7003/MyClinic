@@ -49,7 +49,7 @@ class User(AbstractBaseUser):
         ('lab', 'Lab'),
         ('ambulance', 'Ambulance'),
     )
-    user_id = models.CharField(max_length=4, unique=True, default=generate_customer_id, editable=False)
+    user_id = models.CharField(max_length=4, primary_key=True, default=generate_customer_id, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100,unique=True, null=True, blank=True)
