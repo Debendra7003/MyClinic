@@ -45,6 +45,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'LoginAccess',
+    'Patients',
+    'Appointments',
+    'Labs',
+    'Core',
 ]
 
 MIDDLEWARE = [
