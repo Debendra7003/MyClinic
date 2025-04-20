@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'Appointments',
     'Labs',
     'Core',
+    'DoctorAccess',
 ]
 
 MIDDLEWARE = [

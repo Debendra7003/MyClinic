@@ -4,7 +4,7 @@ from .models import User
 
 
 class AdminAdmin(BaseUserAdmin):
-    list_display = ["id", "first_name","last_name", "email", "mobile_number", "is_admin", "is_active"]
+    list_display = ["user_id", "first_name","last_name", "email", "mobile_number", "is_admin", "is_active"]
     list_filter = ["is_admin", "is_active"]
 
     fieldsets = [
@@ -23,7 +23,7 @@ class AdminAdmin(BaseUserAdmin):
     ]
 
     search_fields = ["email","mobile_number"]
-    ordering = ["id"]
+    ordering = ["user_id"]
     filter_horizontal = []
 
 
