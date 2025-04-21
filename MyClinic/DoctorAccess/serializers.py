@@ -4,24 +4,24 @@ from LoginAccess.models import User
 
 
 class DoctorRegistrationSerializer(serializers.ModelSerializer):
-    user_id = serializers.CharField(write_only=True)
-    user = serializers.SerializerMethodField(read_only=True)
+    doctor = serializers.CharField(write_only=True)  # accepts "XOP7"
+    doctor_user_id = serializers.SerializerMethodField(read_only=True)  # returns it back in response
 
     class Meta:
         model = DoctorRegistration
-        fields = ['user_id', 'user', 'doctor_name', 'specialist', 'license_number',
-                  'clinic_name', 'clinic_address', 'experience', 'profile_image']
+        fields = [
+            'doctor', 'doctor_user_id', 'doctor_name', 'specialist', 'license_number',
+            'clinic_name', 'clinic_address', 'experience', 'status', 'profile_image'
+        ]
 
-    def get_user(self, obj):
-        return obj.user_id.user_id  # return the string 'XOP7'
+    def get_doctor_user_id(self, obj):
+        return obj.doctor.user_id
 
     def create(self, validated_data):
-        user_id_str = validated_data.pop('user_id')
-
+        doctor_user_id = validated_data.pop('doctor')
         try:
-            user = User.objects.get(user_id=user_id_str)
+            user = User.objects.get(user_id=doctor_user_id)
         except User.DoesNotExist:
-            raise serializers.ValidationError({'user_id': 'Invalid user_id: user not found'})
-
-        validated_data['user_id'] = user  # 🔁 use actual User instance
+            raise serializers.ValidationError({"doctor": "Doctor with this user_id does not exist."})
+        validated_data['doctor'] = user
         return DoctorRegistration.objects.create(**validated_data)
