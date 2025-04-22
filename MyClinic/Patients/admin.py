@@ -3,7 +3,7 @@ from .models import PatientProfile, Prescription, AmbulanceRequest
 
 @admin.register(PatientProfile)
 class PatientProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'date_of_birth', 'phone', 'created_at')
+    list_display = ('user', 'date_of_birth', 'created_at')
     search_fields = ('user__username', 'phone')
 
 @admin.register(Prescription)

@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        
         fields = [
             'user_id', 'first_name', 'last_name', 'email', 'mobile_number',
             'password', 'password2', 'role']
@@ -42,7 +43,7 @@ class UserLogin(serializers.Serializer):
         user = None
         user = User.objects.filter(mobile_number=data['mobile_number']).first()
         if user is None:
-            raise serializers.ValidationError("Invalid Logi Credentials")
+            raise serializers.ValidationError("Invalid Login Credentials")
         data['user'] = user
         return data
     # class Meta:

@@ -1,17 +1,28 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class PatientProfile(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
     date_of_birth = models.DateField(null=True, blank=True)
-    # phone = models.CharField(max_length=20, blank=True)
+    age = property(lambda self: self.get_age())
+    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')], blank=True, null=True)
     address = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username}'s Profile"
+        return f"{self.user}'s Profile"
+    
+    def get_age(self):
+        from datetime import date
+        if self.date_of_birth:
+            today = date.today()
+            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            return age
+        return None
 
 class Prescription(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -24,7 +35,7 @@ class Prescription(models.Model):
         return f"Prescription for {self.patient.user.username}"
 
 class AmbulanceRequest(models.Model):
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='ambulance_requests')
     location = models.TextField()
     status = models.CharField(max_length=50, choices=[
@@ -37,6 +48,16 @@ class AmbulanceRequest(models.Model):
     def __str__(self):
         return f"Ambulance Request by {self.patient.user.username}"
 
+
+class Insurance(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    provider = models.CharField(max_length=255)
+    policy_number = models.CharField(max_length=100, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='insurances' ,null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.provider} - {self.policy_number}"
 
 
 

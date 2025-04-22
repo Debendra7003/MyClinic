@@ -1,23 +1,27 @@
 from rest_framework import serializers
-from .models import PatientProfile, Prescription, AmbulanceRequest
-from Core.models import Insurance
+from .models import PatientProfile, Prescription, AmbulanceRequest, Insurance
 
 class PatientProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientProfile
-        fields = ['id', 'date_of_birth', 'phone', 'address', 'created_at']
+        fields = ['id','user_id', 'date_of_birth','age','gender', 'address', 'created_at']
+        read_only_fields = ['id','user_id', 'created_at']
 
 class PrescriptionSerializer(serializers.ModelSerializer):
+    patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)
     class Meta:
         model = Prescription
-        fields = ['id', 'file', 'description', 'uploaded_at']
+        fields = ['id', 'file', 'description', 'uploaded_at', 'patient', 'patient_user_id']
+        read_only_fields = ['id', 'uploaded_at']
 
 class AmbulanceRequestSerializer(serializers.ModelSerializer):
+    patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)
     class Meta:
         model = AmbulanceRequest
-        fields = ['id', 'location', 'status', 'created_at']
+        fields = ['id', 'location', 'status', 'created_at', 'patient_user_id']
 
 class InsuranceSerializer(serializers.ModelSerializer):
+    patient_user_id = serializers.CharField(source='user.user_id', read_only = True)
     class Meta:
         model = Insurance
-        fields = ['id', 'provider', 'policy_number', 'created_at']
+        fields = ['id', 'provider', 'policy_number', 'created_at', 'patient_user_id']

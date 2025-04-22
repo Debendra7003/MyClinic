@@ -1,0 +1,6 @@
+clinic_virtual/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.log
