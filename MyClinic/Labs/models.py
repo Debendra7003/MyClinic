@@ -47,6 +47,7 @@ class LabType(models.Model):
 class LabTest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='lab_tests')
+    lab_profile = models.ForeignKey(LabProfile, on_delete=models.CASCADE, related_name='lab_tests')
     test_type = models.CharField(max_length=255)
     scheduled_date = models.DateTimeField()
     status = models.CharField(max_length=50, choices=[

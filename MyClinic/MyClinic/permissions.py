@@ -6,7 +6,7 @@ class IsPatient(BasePermission):
         return request.user.is_authenticated and request.user.role == 'patient'
 
 class IsLab(BasePermission):
-    def hads_permission(self, request, view):
+    def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'lab'
 
 class IsDoctor(BasePermission):

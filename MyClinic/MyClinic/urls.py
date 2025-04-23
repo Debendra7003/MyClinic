@@ -22,5 +22,6 @@ urlpatterns = [
     path('users/', include('LoginAccess.urls')),
     path('patients/', include('Patients.urls')),
     path('labs/', include('Labs.urls')),
+    path('doctor/',include('DoctorAccess.urls'))
     # path('core/', include('Core.urls')),
 ]

@@ -6,7 +6,7 @@ from Patients.serializers import PatientProfileSerializer
 class LabTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = LabType
-        fields = ['id', 'name', 'tests']
+        fields = ['id', 'name', 'tests', 'lab_profile']
         read_only_fields = ['id']
 
 class LabProfileSerializer(serializers.ModelSerializer):
@@ -32,10 +32,12 @@ class LabReportSerializer(serializers.ModelSerializer):
 class LabTestSerializer(serializers.ModelSerializer):
     patient = PatientProfileSerializer(read_only=True)
     reports = LabReportSerializer(many=True, read_only=True)
+    lab_profile = serializers.PrimaryKeyRelatedField(queryset=LabProfile.objects.all())
+
 
     class Meta:
         model = LabTest
-        fields = ['id', 'patient', 'test_type', 'scheduled_date', 'status', 'created_at', 'reports']
+        fields = ['id', 'patient','lab_profile', 'test_type', 'scheduled_date', 'status', 'created_at', 'reports']
     
     def validate(self, data):
         if self.context['request'].user.role != 'patient':

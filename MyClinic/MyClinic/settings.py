@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'LoginAccess',
     'Patients',
     'Labs',
+    'DoctorAccess'
 ]
 
 MIDDLEWARE = [

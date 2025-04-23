@@ -25,3 +25,13 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"doctor": "Doctor with this user_id does not exist."})
         validated_data['doctor'] = user
         return DoctorRegistration.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        doctor_user_id = validated_data.pop('doctor', None)
+        if doctor_user_id:
+            try:
+                user = User.objects.get(user_id=doctor_user_id)
+                validated_data['doctor'] = user
+            except User.DoesNotExist:
+                raise serializers.ValidationError({"doctor": "Doctor with this user_id does not exist."})
+        return super().update(instance, validated_data)
