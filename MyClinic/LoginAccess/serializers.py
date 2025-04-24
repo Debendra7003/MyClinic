@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         
         fields = [
             'user_id', 'first_name', 'last_name', 'email', 'mobile_number',
-            'password', 'password2', 'role']
+            'password', 'password2', 'role','firebase_registration_token']
         
         read_only_fields = ['user_id', 'is_active', 'created_at']
 

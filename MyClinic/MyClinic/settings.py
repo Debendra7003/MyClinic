@@ -13,6 +13,16 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import firebase_admin
+from firebase_admin import credentials
+from dotenv import load_dotenv
+load_dotenv()
+
+# FIREBASE
+FIREBASE_CREDENTIALS = './fire-cred.json'
+cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+firebase_admin.initialize_app(cred)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -137,6 +147,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'LoginAccess.firebase_auth.FirebaseAuthentication',      # FIREBASE
+        # 'rest_framework.authentication.SessionAuthentication',   # FIREBASE
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -210,10 +222,10 @@ SIMPLE_JWT = {
 # DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@yourecommerceapp.com')
 
 # # SMS Settings
-# SMS_BACKEND = str(os.getenv('SMS_BACKEND'))
-# TWILIO_ACCOUNT_SID = os.getenv('SMS_API_KEY', '')
-# TWILIO_AUTH_TOKEN = os.getenv('SMS_API_SECRET', '')
-# SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'ECOMSMS')
+SMS_BACKEND = str(os.getenv('SMS_BACKEND'))
+TWILIO_ACCOUNT_SID = os.getenv('SMS_API_KEY', '')
+TWILIO_AUTH_TOKEN = os.getenv('SMS_API_SECRET', '')
+SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'ECOMSMS')
 
 # RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 # RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
