@@ -6,6 +6,41 @@ from Patients.models import PatientProfile
 from rest_framework import serializers
 from rest_framework.permissions import BasePermission
 from MyClinic.permissions import IsLab, IsPatient, IsReadOnly
+from datetime import datetime, timedelta
+from MyClinic.utils import send_scheduled_push_notification
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+
+def schedule_lab_test_notifications(lab_test):
+    patient = lab_test.patient
+    registration_token = patient.user.firebase_registration_token
+    print(f"Registration_Token: {registration_token}")
+    if registration_token:
+
+        # 1 day before
+        send_scheduled_push_notification(
+            registration_token=registration_token,
+            title="Lab Test Reminder",
+            body=f"Your lab test for {lab_test.test_type} is scheduled tomorrow at {lab_test.scheduled_date}.",
+            delivery_time=lab_test.scheduled_date - timedelta(days=1),
+        )
+
+        # 2 hours before
+        send_scheduled_push_notification(
+            registration_token=registration_token,
+            title="Lab Test Reminder",
+            body=f"Your lab test for {lab_test.test_type} is scheduled in 2 hours at {lab_test.scheduled_date}.",
+            delivery_time=lab_test.scheduled_date - timedelta(hours=2),
+        )
+
+        # 1 hour before
+        send_scheduled_push_notification(
+            registration_token=registration_token,
+            title="Lab Test Reminder",
+            body=f"Your lab test for {lab_test.test_type} is scheduled in 1 hour at {lab_test.scheduled_date}.",
+            delivery_time=lab_test.scheduled_date - timedelta(hours=1),
+        )
 
 class LabProfileViewSet(viewsets.ModelViewSet):
     queryset = LabProfile.objects.all()
@@ -38,7 +73,7 @@ class LabTypeViewSet(viewsets.ModelViewSet):
     queryset = LabType.objects.all()
     serializer_class = LabTypeSerializer
     permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
-
+    
     def perform_create(self, serializer):
         if not hasattr(self.request.user, 'lab_profile'):
             raise serializers.ValidationError("Only labs can create lab types.")
@@ -56,11 +91,15 @@ class LabTypeViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError("You are not authorized to delete this lab type.")
         return super().destroy(request, *args, **kwargs)
 
-    
+
 class LabTestViewSet(viewsets.ModelViewSet):
     queryset = LabTest.objects.all()
     serializer_class = LabTestSerializer
     permission_classes = [IsPatient | IsLab] # Patients can book, labs can view/manage
+
+    # filter_backends = [DjangoFilterBackend, SearchFilter]
+    # filterset_fields = ['lab_profile__name', 'test_type']
+    # search_fields = ['lab_profile__name', 'test_type']
 
     def get_queryset(self):
         user = self.request.user
@@ -79,12 +118,34 @@ class LabTestViewSet(viewsets.ModelViewSet):
         try:
             patient_profile = PatientProfile.objects.get(user=self.request.user)
             lab_profile = LabProfile.objects.get(id=self.request.data.get('lab_profile'))
-            serializer.save(patient=patient_profile, lab_profile=lab_profile)
+            lab_test_store = serializer.save(patient=patient_profile, lab_profile=lab_profile)
+            schedule_lab_test_notifications(lab_test_store)
         except PatientProfile.DoesNotExist:
             raise serializers.ValidationError("No patient profile found for the current user.")
         except LabProfile.DoesNotExist:
             raise serializers.ValidationError("Invalid lab profile ID.")
-        
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+
+        if user.role == 'lab' and instance.lab_profile != user.lab_profile:
+            raise serializers.ValidationError("You are not authorized to update this lab test.")
+        elif user.role == 'patient' and instance.patient.user != user:
+            raise serializers.ValidationError("You are not authorized to update this lab test.")
+
+        # Perform the update
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+
+        # Trigger notifications if the scheduled_date is updated
+        if 'scheduled_date' in serializer.validated_data:
+            schedule_lab_test_notifications(updated_instance)
+
+        return Response(serializer.data)
+
 
 class LabReportViewSet(viewsets.ModelViewSet):
     queryset = LabReport.objects.all()
@@ -132,3 +193,36 @@ class LabReportViewSet(viewsets.ModelViewSet):
         if instance.lab_test.lab_profile != request.user.lab_profile:
             raise serializers.ValidationError("You are not authorized to delete this lab report.")
         return super().destroy(request, *args, **kwargs)
+
+
+class LabSearchViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LabProfile.objects.all()
+    serializer_class = LabProfileSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['name', 'lab_types__name', 'lab_types__tests']
+    search_fields = ['name', 'lab_types__name', 'lab_types__tests']
+
+    def get_queryset(self):
+        return LabProfile.objects.prefetch_related('lab_types')
+    
+
+# from django_filters import rest_framework as filters
+# from .models import LabProfile
+# from django.db import models
+# class LabProfileFilter(filters.FilterSet):
+#     tests = filters.CharFilter(field_name='lab_types__tests', lookup_expr='icontains')  # Custom filter for JSONField
+
+#     class Meta:
+#         model = LabProfile
+#         fields = {
+#             'name': ['icontains'],  # Filter by lab name
+#             'lab_types__name': ['icontains'],  # Filter by lab type name
+#         }
+#         filter_overrides = {
+#             models.JSONField: {
+#                 'filter_class': filters.CharFilter,  # Use CharFilter for JSONField
+#                 'extra': lambda f: {
+#                     'lookup_expr': 'icontains',  # Allows partial matching
+#                 },
+#             },
+#         }

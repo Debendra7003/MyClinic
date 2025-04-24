@@ -6,7 +6,7 @@ from .serializers import (
     AmbulanceRequestSerializer, InsuranceSerializer
 )
 from rest_framework import serializers
-from MyClinic.permissions import IsPatient, IsReadOnly
+from MyClinic.permissions import IsPatient, IsReadOnly, IsDoctor, IsLab
 # from django.contrib.auth.models import User
 
 
@@ -27,7 +27,7 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
 class PrescriptionViewSet(viewsets.ModelViewSet):
     queryset = Prescription.objects.all()
     serializer_class = PrescriptionSerializer
-    permission_classes = [IsAuthenticated] # change to patient, doctor, lab
+    permission_classes = [IsPatient | IsDoctor | IsLab] # change to patient, doctor, lab
 
     def get_queryset(self):
         user = self.request.user

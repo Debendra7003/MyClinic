@@ -22,7 +22,7 @@ class LabProfileSerializer(serializers.ModelSerializer):
 class LabReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = LabReport
-        fields = ['id', 'file', 'description', 'published_at']
+        fields = ['id', 'file', 'description', 'published_at','lab_test']
     
     def validate(self, data):
         if self.context['request'].user.role != 'lab':

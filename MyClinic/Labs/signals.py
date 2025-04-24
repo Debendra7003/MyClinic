@@ -11,7 +11,9 @@ def notify_lab_report_ready(sender, instance, created, **kwargs):
     if created:
         patient = instance.lab_test.patient
         registration_token = patient.user.firebase_registration_token
+        print(f"Working But Registration Token: {registration_token}")
         if registration_token:
+            print(f"Working, Registration Token: {registration_token}")
             title = "Lab Report Ready"
             body = f"Your lab report for {instance.lab_test.test_type} is now available."
             send_push_notification(registration_token, title, body)
