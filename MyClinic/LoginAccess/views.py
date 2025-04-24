@@ -23,8 +23,7 @@ class UserRegisterView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
-        return Response({"message": "User registered Failed."},serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({"message": "User registered Failed.", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 class UserLoginView(APIView):
     permission_classes= [AllowAny]
     def post(self, request, format=None):
