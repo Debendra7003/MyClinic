@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DoctorRegistration
+from .models import DoctorRegistration,DoctorAppointment
 from LoginAccess.models import User
 
 
