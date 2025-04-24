@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_filters',
     'LoginAccess',
     'DoctorAccess',
+    'AmbulanceAccess',
 ]
 
 MIDDLEWARE = [
