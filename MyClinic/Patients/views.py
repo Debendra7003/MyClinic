@@ -3,10 +3,16 @@ from rest_framework.permissions import IsAuthenticated
 from .models import PatientProfile, Prescription, Insurance
 from .serializers import (
     PatientProfileSerializer, PrescriptionSerializer,
-    InsuranceSerializer
+    InsuranceSerializer, PatientAppointmentUpdateSerializer
 )
 from rest_framework import serializers
 from MyClinic.permissions import IsPatient, IsReadOnly, IsDoctor, IsLab
+from DoctorAccess.models import DoctorAppointment
+from DoctorAccess.serializers import DoctorAppointmentSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
 # from django.contrib.auth.models import User
 
 
@@ -61,6 +67,41 @@ class InsuranceViewSet(viewsets.ModelViewSet):
         except PatientProfile.DoesNotExist:
             raise serializers.ValidationError("No patient profile found for the current user.")
 
+
+class PatientAppointmentsView(APIView):
+    permission_classes = [IsPatient]
+
+    def get(self, request):
+        try:
+            patient_profile = PatientProfile.objects.get(user=request.user)
+            appointments = DoctorAppointment.objects.filter(patient_id=request.user)
+            serializer = DoctorAppointmentSerializer(appointments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except PatientProfile.DoesNotExist:
+            return Response({"error": "Patient profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class PatientAppointmentUpdate(APIView):
+    permission_classes = [IsPatient]
+
+    def patch(self, request, registration_number):
+        try:
+            appointment = DoctorAppointment.objects.get(registration_number=registration_number)
+        except DoctorAppointment.DoesNotExist:
+            return Response({"error": "Appointment with the given registration number not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if 'date_of_visit' not in request.data:
+            return Response({"error": "'date_of_visit' field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        elif 'visit_time' not in request.data:
+            return Response({"error": "'visit_time' field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        elif 'shift' not in request.data:
+            return Response({"error": "'shift' field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = PatientAppointmentUpdateSerializer(appointment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Appointment rescheduled successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class AmbulanceRequestViewSet(viewsets.ModelViewSet):

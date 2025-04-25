@@ -1,14 +1,13 @@
 from django.shortcuts import render
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, UserLogin, GoogleSignInSerializer
+from .serializers import UserSerializer, UserLogin, GoogleSignInSerializer, FirebaseTokenSerializer
 from django.contrib.auth import authenticate
 # from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
-from .firebase_auth import FirebaseAuthentication
 from .models import User
 
 def get_tokens_for_user(user):
@@ -61,12 +60,28 @@ class UserLoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class FirebaseTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = FirebaseTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            firebase_token = serializer.validated_data['firebase_registration_token']
+            user = request.user
+            user.firebase_registration_token = firebase_token
+            user.save()
+            return Response({'message': 'Firebase registration token updated successfully.'}, status=status.HTTP_200_OK)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class GoogleSignInView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = GoogleSignInSerializer(data=request.data)
+        print(serializer.is_valid())
+        print(serializer.errors)
         if serializer.is_valid():
             user = serializer.validated_data['user']
             response_data = {
@@ -84,3 +99,29 @@ class GoogleSignInView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response({'msg': "Google Sign-In Failed", 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+# class GoogleSignInView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = GoogleSignInSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.validated_data['user']
+#             response_data = {
+#                 'user_id': user.user_id,
+#                 'first_name': user.first_name,
+#                 'last_name': user.last_name,
+#                 'email': user.email,
+#                 'mobile_number': user.mobile_number,
+#                 'role': user.role,
+#                 'is_admin': user.is_admin
+#             }
+#             token = get_tokens_for_user(user)
+#             return Response(
+#                 {'msg': "Google Sign-In Successful", 'user': response_data, 'Token': token},
+#                 status=status.HTTP_200_OK
+#             )
+#         return Response({'msg': "Google Sign-In Failed", 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

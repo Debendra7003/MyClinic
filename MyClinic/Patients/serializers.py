@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import PatientProfile, Prescription, Insurance
+from DoctorAccess.models import DoctorAppointment
 
 class PatientProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,7 +21,14 @@ class InsuranceSerializer(serializers.ModelSerializer):
         model = Insurance
         fields = ['id', 'provider', 'policy_number', 'created_at', 'patient_user_id']
 
+class PatientAppointmentUpdateSerializer(serializers.ModelSerializer):
+    date_of_visit = serializers.DateField(required=True)
+    visit_time = serializers.TimeField(required=True)
+    shift = serializers.CharField(required=True)
 
+    class Meta:
+        model = DoctorAppointment
+        fields = ['date_of_visit', 'visit_time', 'shift']
 
 # class AmbulanceRequestSerializer(serializers.ModelSerializer):
 #     patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)

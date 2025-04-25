@@ -1,5 +1,10 @@
-from django.urls import path
-from .views import DoctorRegistrationView, DoctorProfileAPIView, DoctorSpecialist,DoctorAppointmentView, GetAppointment
+from django.urls import path, include
+from .views import (DoctorRegistrationView, DoctorProfileAPIView, DoctorSpecialist,DoctorAppointmentView, 
+GetAppointment, DoctorAvailabilityViewSet, AppointmentChecked)
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'availability', DoctorAvailabilityViewSet, basename='doctor-availability')
 
 urlpatterns = [
     path('register/', DoctorRegistrationView.as_view(), name='doctor-register'),
@@ -9,5 +14,8 @@ urlpatterns = [
     path('appointment/', DoctorAppointmentView.as_view(), name='doctor-appointment'),
     path('appointmentlist/<str:lookup_value>/',GetAppointment.as_view(), name='get-appointment-list'),
     path('appointmentlist/',GetAppointment.as_view(), name='get-all-appointment-list'),
+    path('appointment-checked/<str:registration_number>/',AppointmentChecked.as_view(), name='doctor-appointment-checked'),
+    path('', include(router.urls))
+
 
 ]

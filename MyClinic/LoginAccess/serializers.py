@@ -3,7 +3,7 @@ from .models import User
 import firebase_admin
 from firebase_admin import auth
 from .models import generate_customer_id
-
+from .authentication import handle_firebase_token
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -14,7 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         
         fields = [
             'user_id', 'first_name', 'last_name', 'email', 'mobile_number',
-            'password', 'password2', 'role','firebase_registration_token']
+            'password', 'password2', 'role']
         
         read_only_fields = ['user_id', 'is_active', 'created_at']
 
@@ -49,44 +49,68 @@ class UserLogin(serializers.Serializer):
     #     model=User
     #     fields=['mobile_number','password']
 
+class FirebaseTokenSerializer(serializers.Serializer):
+    firebase_registration_token = serializers.CharField(required=True)
+
 
 class GoogleSignInSerializer(serializers.Serializer):
     id_token = serializers.CharField()
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default='patient')
-
+    mobile_number = serializers.CharField()
     def validate(self, data):
         id_token = data.get('id_token')
+        role = data.get('role', 'patient')
+        mobile_number = data.get('mobile_number')
         try:
-            decoded_token = auth.verify_id_token(id_token)
-            firebase_uid = decoded_token['uid']
-            email = decoded_token.get('email')
-            name = decoded_token.get('name', '')
-
-            # Try to find user by firebase_uid or email
-            user = User.objects.filter(firebase_uid=firebase_uid).first()
-            if not user and email:
-                user = User.objects.filter(email=email).first()
-
-            if not user:
-                # Create new user
-                user = User.objects.create_user(
-                    mobile_number=email or f"{firebase_uid}@example.com",
-                    firebase_uid=firebase_uid,
-                    email=email,
-                    first_name=name.split(' ')[0] if name else '',
-                    last_name=' '.join(name.split(' ')[1:]) if name else '',
-                    role=data.get('role', 'patient'),
-                    user_id=generate_customer_id()
-                )
-            else:
-                # Update role if provided
-                user.role = data.get('role', user.role)
-                user.save()
+            user = handle_firebase_token(id_token, role, mobile_number)
             data['user'] = user
             return data
-        except auth.InvalidIdTokenError:
-            raise serializers.ValidationError("Invalid Google token")
-        except auth.ExpiredIdTokenError:
-            raise serializers.ValidationError("Google token has expired")
-        except Exception as e:
-            raise serializers.ValidationError(f"Google Sign-In failed: {str(e)}")
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
+
+
+
+
+
+
+
+# class GoogleSignInSerializer(serializers.Serializer):
+#     id_token = serializers.CharField()
+#     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default='patient')
+
+#     def validate(self, data):
+#         id_token = data.get('id_token')
+#         try:
+#             decoded_token = auth.verify_id_token(id_token)
+#             firebase_uid = decoded_token['uid']
+#             email = decoded_token.get('email')
+#             name = decoded_token.get('name', '')
+
+#             # Try to find user by firebase_uid or email
+#             user = User.objects.filter(firebase_uid=firebase_uid).first()
+#             if not user and email:
+#                 user = User.objects.filter(email=email).first()
+
+#             if not user:
+#                 # Create new user
+#                 user = User.objects.create_user(
+#                     mobile_number=email or f"{firebase_uid}@example.com",
+#                     firebase_uid=firebase_uid,
+#                     email=email,
+#                     first_name=name.split(' ')[0] if name else '',
+#                     last_name=' '.join(name.split(' ')[1:]) if name else '',
+#                     role=data.get('role', 'patient'),
+#                     user_id=generate_customer_id()
+#                 )
+#             else:
+#                 # Update role if provided
+#                 user.role = data.get('role', user.role)
+#                 user.save()
+#             data['user'] = user
+#             return data
+#         except auth.InvalidIdTokenError:
+#             raise serializers.ValidationError("Invalid Google token")
+#         except auth.ExpiredIdTokenError:
+#             raise serializers.ValidationError("Google token has expired")
+#         except Exception as e:
+#             raise serializers.ValidationError(f"Google Sign-In failed: {str(e)}")

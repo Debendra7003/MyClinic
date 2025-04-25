@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DoctorRegistration,DoctorAppointment
+from .models import DoctorRegistration,DoctorAppointment, DoctorAvailability
 from LoginAccess.models import User
 
 
@@ -42,6 +42,19 @@ class DoctorAppointmentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'doctor_id', 'doctor_name', 'specialist', 'patient_id',
             'patient_name', 'patient_number', 'patient_age', 'patient_gender',
-            'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number'
+            'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number', 'checked', 'cancelled'
         ]
         read_only_fields = ['id', 'booked_at', 'registration_number']
+
+class AppointmentCheckedSerializer(serializers.ModelSerializer):
+    checked = serializers.BooleanField(required=True)
+
+    class Meta:
+        model = DoctorAppointment
+        fields = ['checked']
+
+class DoctorAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DoctorAvailability
+        fields = ['id', 'doctor', 'date','time','available', 'shift', 'created_at']
+        read_only_fields = ['id', 'created_at','doctor']
