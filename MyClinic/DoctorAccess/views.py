@@ -15,6 +15,9 @@ from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
+from MyClinic.utils import send_push_notification, send_scheduled_push_notification
+from datetime import timedelta
+
 
 #------------------------------------------------- Doctor Register functionality-----------------------------------------------------------
 class DoctorRegistrationView(APIView):
@@ -92,10 +95,30 @@ class DoctorAppointmentView(APIView):
         if serializer.is_valid():
             try:
                 appointment = serializer.save()
+                # Push Notification to doctor when an appointment is booked
+                doctor = appointment.doctor_id
+                if doctor.firebase_registration_token:
+                    send_push_notification(
+                        registration_token=doctor.firebase_registration_token,
+                        title="New Appointment Booked",
+                        body=f"An appointment has been booked by {appointment.patient_name} on {appointment.date_of_visit} at {appointment.visit_time}.",
+                    )
+
+                # Schedule a notification for the patient a day before the appointment
+                patient = appointment.patient_id
+                if patient.firebase_registration_token:
+                    send_scheduled_push_notification(
+                        registration_token=patient.firebase_registration_token,
+                        title="Appointment Reminder",
+                        body=f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
+                        delivery_time=appointment.date_of_visit - timedelta(days=1),
+                    )
+
                 return Response({
                     "message": "Appointment booked successfully",
                     "data": DoctorAppointmentSerializer(appointment).data
                 }, status=status.HTTP_201_CREATED)
+                
             except IntegrityError as e:
                 return Response({"error": "Integrity error", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -151,7 +174,40 @@ class AppointmentChecked(APIView):
         serializer = AppointmentCheckedSerializer(doctor, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+
+            # Notify all patients booked on the same day
+            same_day_appointments = DoctorAppointment.objects.filter(
+                doctor_id=doctor.doctor_id,
+                date_of_visit=doctor.date_of_visit,
+                shift=doctor.shift,
+                cancelled=False
+            ).order_by('visit_time')
+
+            for appt in same_day_appointments:
+                if appt.checked:
+                    continue  # Skip already completed appointments
+
+                if appt.registration_number == registration_number:
+                    # Notify the patient whose appointment is being marked as completed
+                    if appt.patient_id.firebase_registration_token:
+                        send_push_notification(
+                            registration_token=appt.patient_id.firebase_registration_token,
+                            title="Appointment Completed",
+                            body=f"Your appointment with Dr. {appt.doctor_name} has been completed.",
+                        )
+                    break  # Stop notifying further once the current appointment is completed
+
+                # Notify other patients about the progress
+                if appt.patient_id.firebase_registration_token:
+                    send_push_notification(
+                        registration_token=appt.patient_id.firebase_registration_token,
+                        title="Appointment Progress",
+                        body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                    )
+
             return Response({"message": "Checked field updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
+
+
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
