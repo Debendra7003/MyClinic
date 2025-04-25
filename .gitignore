@@ -4,3 +4,6 @@ clinic_virtual/
 *.pyd
 __pycache__/
 *.log
+gen_dummy_id_token.py
+dummy_id_token.txt
+get_id_token.py
