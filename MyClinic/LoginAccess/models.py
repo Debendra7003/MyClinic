@@ -60,6 +60,8 @@ class User(AbstractBaseUser):
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
     firebase_registration_token = models.TextField(blank=True, null=True)
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True) 
+
     objects = UserManager()
     USERNAME_FIELD = "mobile_number"
     REQUIRED_FIELDS = ['first_name', 'last_name']

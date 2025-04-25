@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PatientProfile, Prescription, AmbulanceRequest, Insurance
+from .models import PatientProfile, Prescription, Insurance
 
 class PatientProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,14 +14,16 @@ class PrescriptionSerializer(serializers.ModelSerializer):
         fields = ['id', 'file', 'description', 'uploaded_at', 'patient', 'patient_user_id']
         read_only_fields = ['id', 'uploaded_at']
 
-class AmbulanceRequestSerializer(serializers.ModelSerializer):
-    patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)
-    class Meta:
-        model = AmbulanceRequest
-        fields = ['id', 'location', 'status', 'created_at', 'patient_user_id']
-
 class InsuranceSerializer(serializers.ModelSerializer):
     patient_user_id = serializers.CharField(source='user.user_id', read_only = True)
     class Meta:
         model = Insurance
         fields = ['id', 'provider', 'policy_number', 'created_at', 'patient_user_id']
+
+
+
+# class AmbulanceRequestSerializer(serializers.ModelSerializer):
+#     patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)
+#     class Meta:
+#         model = AmbulanceRequest
+#         fields = ['id', 'location', 'status', 'created_at', 'patient_user_id']

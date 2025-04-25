@@ -1,14 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    PatientProfileViewSet, PrescriptionViewSet,
-    AmbulanceRequestViewSet, InsuranceViewSet
+    PatientProfileViewSet, PrescriptionViewSet,InsuranceViewSet,
+    # AmbulanceRequestViewSet
 )
 
 router = DefaultRouter()
 router.register(r'profiles', PatientProfileViewSet)
 router.register(r'prescriptions', PrescriptionViewSet)
-router.register(r'ambulance-requests', AmbulanceRequestViewSet)
+# router.register(r'ambulance-requests', AmbulanceRequestViewSet)
 router.register(r'insurances', InsuranceViewSet)
 
 urlpatterns = [

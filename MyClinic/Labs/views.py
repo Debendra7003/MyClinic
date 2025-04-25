@@ -11,6 +11,8 @@ from MyClinic.utils import send_scheduled_push_notification
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
+from django_filters import rest_framework as filters
+from django.db import models
 
 def schedule_lab_test_notifications(lab_test):
     patient = lab_test.patient
@@ -195,34 +197,34 @@ class LabReportViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+class LabProfileFilter(filters.FilterSet):
+    tests = filters.CharFilter(field_name='lab_types__tests', lookup_expr='icontains')  # Custom filter for JSONField
+
+    class Meta:
+        model = LabProfile
+        fields = {
+            'name': ['icontains'],  
+            'lab_types__name': ['icontains'], 
+        }
+        filter_overrides = {
+            models.JSONField: {
+                'filter_class': filters.CharFilter,  
+                'extra': lambda f: {
+                    'lookup_expr': 'icontains',  
+                },
+            },
+        }
+
+
 class LabSearchViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LabProfile.objects.all()
     serializer_class = LabProfileSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = LabProfileFilter
     filterset_fields = ['name', 'lab_types__name', 'lab_types__tests']
     search_fields = ['name', 'lab_types__name', 'lab_types__tests']
 
     def get_queryset(self):
         return LabProfile.objects.prefetch_related('lab_types')
     
-
-# from django_filters import rest_framework as filters
-# from .models import LabProfile
-# from django.db import models
-# class LabProfileFilter(filters.FilterSet):
-#     tests = filters.CharFilter(field_name='lab_types__tests', lookup_expr='icontains')  # Custom filter for JSONField
-
-#     class Meta:
-#         model = LabProfile
-#         fields = {
-#             'name': ['icontains'],  # Filter by lab name
-#             'lab_types__name': ['icontains'],  # Filter by lab type name
-#         }
-#         filter_overrides = {
-#             models.JSONField: {
-#                 'filter_class': filters.CharFilter,  # Use CharFilter for JSONField
-#                 'extra': lambda f: {
-#                     'lookup_expr': 'icontains',  # Allows partial matching
-#                 },
-#             },
-#         }
+ 

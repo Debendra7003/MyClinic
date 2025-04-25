@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'LoginAccess',
     'Patients',
     'Labs',
-    'DoctorAccess'
+    'DoctorAccess',
     'AmbulanceAccess',
 ]
 
@@ -238,5 +238,6 @@ SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'ECOMSMS')
 
 AUTHENTICATION_BACKENDS = [
     'LoginAccess.authentication.CustomAuthBackend',
+    'LoginAccess.authentication.FirebaseAuthentication',
     'django.contrib.auth.backends.ModelBackend',       # Default backend as fallback
     ]

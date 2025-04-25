@@ -34,19 +34,6 @@ class Prescription(models.Model):
     def __str__(self):
         return f"Prescription for {self.patient.user.username}"
 
-class AmbulanceRequest(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='ambulance_requests')
-    location = models.TextField()
-    status = models.CharField(max_length=50, choices=[
-        ('PENDING', 'Pending'),
-        ('DISPATCHED', 'Dispatched'),
-        ('COMPLETED', 'Completed'),
-    ], default='PENDING')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Ambulance Request by {self.patient.user.username}"
 
 
 class Insurance(models.Model):
@@ -62,8 +49,19 @@ class Insurance(models.Model):
 
 
 
+# class AmbulanceRequest(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='ambulance_requests')
+#     location = models.TextField()
+#     status = models.CharField(max_length=50, choices=[
+#         ('PENDING', 'Pending'),
+#         ('DISPATCHED', 'Dispatched'),
+#         ('COMPLETED', 'Completed'),
+#     ], default='PENDING')
+#     created_at = models.DateTimeField(auto_now_add=True)
 
-
+#     def __str__(self):
+#         return f"Ambulance Request by {self.patient.user.username}"
 
 
 

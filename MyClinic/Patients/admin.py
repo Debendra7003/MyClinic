@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import PatientProfile, Prescription, AmbulanceRequest
+# from .models import PatientProfile, Prescription, AmbulanceRequest
+from .models import PatientProfile, Prescription
 
 @admin.register(PatientProfile)
 class PatientProfileAdmin(admin.ModelAdmin):
@@ -11,7 +12,7 @@ class PrescriptionAdmin(admin.ModelAdmin):
     list_display = ('patient', 'uploaded_at', 'description')
     search_fields = ('patient__user__username', 'description')
 
-@admin.register(AmbulanceRequest)
-class AmbulanceRequestAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'location', 'status', 'created_at')
-    search_fields = ('patient__user__username', 'location')
+# @admin.register(AmbulanceRequest)
+# class AmbulanceRequestAdmin(admin.ModelAdmin):
+#     list_display = ('patient', 'location', 'status', 'created_at')
+#     search_fields = ('patient__user__username', 'location')

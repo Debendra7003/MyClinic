@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from .models import User
-
-
-
-
+import firebase_admin
+from firebase_admin import auth
+from .models import generate_customer_id
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,3 +48,45 @@ class UserLogin(serializers.Serializer):
     # class Meta:
     #     model=User
     #     fields=['mobile_number','password']
+
+
+class GoogleSignInSerializer(serializers.Serializer):
+    id_token = serializers.CharField()
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default='patient')
+
+    def validate(self, data):
+        id_token = data.get('id_token')
+        try:
+            decoded_token = auth.verify_id_token(id_token)
+            firebase_uid = decoded_token['uid']
+            email = decoded_token.get('email')
+            name = decoded_token.get('name', '')
+
+            # Try to find user by firebase_uid or email
+            user = User.objects.filter(firebase_uid=firebase_uid).first()
+            if not user and email:
+                user = User.objects.filter(email=email).first()
+
+            if not user:
+                # Create new user
+                user = User.objects.create_user(
+                    mobile_number=email or f"{firebase_uid}@example.com",
+                    firebase_uid=firebase_uid,
+                    email=email,
+                    first_name=name.split(' ')[0] if name else '',
+                    last_name=' '.join(name.split(' ')[1:]) if name else '',
+                    role=data.get('role', 'patient'),
+                    user_id=generate_customer_id()
+                )
+            else:
+                # Update role if provided
+                user.role = data.get('role', user.role)
+                user.save()
+            data['user'] = user
+            return data
+        except auth.InvalidIdTokenError:
+            raise serializers.ValidationError("Invalid Google token")
+        except auth.ExpiredIdTokenError:
+            raise serializers.ValidationError("Google token has expired")
+        except Exception as e:
+            raise serializers.ValidationError(f"Google Sign-In failed: {str(e)}")

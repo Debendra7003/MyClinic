@@ -35,3 +35,13 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
             except User.DoesNotExist:
                 raise serializers.ValidationError({"doctor": "Doctor with this user_id does not exist."})
         return super().update(instance, validated_data)
+    
+class DoctorAppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DoctorAppointment
+        fields = [
+            'id', 'doctor_id', 'doctor_name', 'specialist', 'patient_id',
+            'patient_name', 'patient_number', 'patient_age', 'patient_gender',
+            'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number'
+        ]
+        read_only_fields = ['id', 'booked_at', 'registration_number']
