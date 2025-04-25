@@ -1,5 +1,8 @@
 from django.urls import path
-from .views import AmbulanceView,ToggleAmbulanceStatusView,AmbulanceByUserView,AmbulanceStatusFilterView, AmbulanceDeleteView
+from .views import (AmbulanceView,
+                    ToggleAmbulanceStatusView,
+                    AmbulanceByUserView,AmbulanceStatusFilterView,
+                    AmbulanceDeleteView,AmbulanceSearchByAreaView)
 
 urlpatterns = [
     path('register/', AmbulanceView.as_view(), name='ambulance_register'),
@@ -8,4 +11,5 @@ urlpatterns = [
     path('count/<str:ambulance_id>/', AmbulanceByUserView.as_view(), name='ambulance-count-active-or-inactive'),
     path('status/', AmbulanceStatusFilterView.as_view(), name='ambulance-status-filter'),
      path('delete/<str:ambulance_id>/<str:vehicle_number>/', AmbulanceDeleteView.as_view(), name='delete-ambulance'),
+     path('area/<str:service_area>/', AmbulanceSearchByAreaView.as_view(), name='ambulance-search-area'),
 ]
