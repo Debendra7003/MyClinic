@@ -61,7 +61,6 @@ class AmbulanceStatusFilterView(APIView):
     permission_classes=[AllowAny]
     def get(self, request):
         active_param = request.GET.get('active')  # ?active=true or false
-
         if active_param is not None:
             if active_param.lower() == "true":
                 ambulances = Ambulance.objects.filter(active=True)
@@ -87,18 +86,23 @@ class AmbulanceDeleteView(APIView):
     def delete(self, request, ambulance_id, vehicle_number):
         # Get the user by custom user_id
         user = get_object_or_404(User, user_id=ambulance_id)
-
         try:
-            ambulance = Ambulance.objects.get(
-                ambulance_id=user,
-                vehicle_number=vehicle_number
-            )
+            ambulance = Ambulance.objects.get( ambulance_id=user,vehicle_number=vehicle_number)
         except Ambulance.DoesNotExist:
             return Response({
-                "error": f"No ambulance found for vehicle '{vehicle_number}' under user '{ambulance_id}'"
-            }, status=status.HTTP_404_NOT_FOUND)
-
+                "error": f"No ambulance found for vehicle '{vehicle_number}' under user '{ambulance_id}'"}, status=status.HTTP_404_NOT_FOUND)
         ambulance.delete()
         return Response({
-            "message": f"Ambulance with vehicle '{vehicle_number}' deleted successfully"
+            "message": f"Ambulance with vehicle '{vehicle_number}' deleted successfully"}, status=status.HTTP_200_OK)
+    
+class AmbulanceSearchByAreaView(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, service_area):
+        ambulances = Ambulance.objects.filter(service_area__icontains=service_area)
+        if not ambulances.exists():
+            return Response({"message": f"No ambulances found in area '{service_area}'"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = AmbulanceSerializer(ambulances, many=True)
+        return Response({
+            # "result_count": ambulances.count(),
+            "ambulances": serializer.data
         }, status=status.HTTP_200_OK)
