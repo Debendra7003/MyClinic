@@ -5,16 +5,16 @@ from rest_framework import status
 from .models import Ambulance
 from .serializers import AmbulanceSerializer
 from django.db.models import Count
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.shortcuts import get_object_or_404
 from LoginAccess.models import User
-
+from MyClinic.permissions import IsAmbulance, IsReadOnly, IsAdmin
 
 # Create your views here.
 
 # ----------------------------------- New Ambulance Register ------------------------------------------------
 class AmbulanceView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAmbulance]
     def post(self, request):
         serializer = AmbulanceSerializer(data=request.data)
         if serializer.is_valid():
@@ -23,9 +23,9 @@ class AmbulanceView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ------------------------------------ Update ambulance active to inactiv or inactive to active-----------------
+# ------------------------------------ Update ambulance active to inactive or inactive to active-----------------
 class ToggleAmbulanceStatusView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAmbulance]
     def put(self, request, ambulance_id, vehicle_number):
         try:
             user = get_object_or_404(User, user_id=ambulance_id)
@@ -39,7 +39,7 @@ class ToggleAmbulanceStatusView(APIView):
     
 # ------------------------------------ Get Total count of active or Inctive ambulance----------------------------
 class AmbulanceByUserView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAuthenticated]
     def get(self, request, ambulance_id):
         # Check if the user exists
         user = get_object_or_404(User, user_id=ambulance_id)
@@ -56,7 +56,7 @@ class AmbulanceByUserView(APIView):
     
 # ------------------------------------Get Active or Iactive Ambulance----------------------------
 class AmbulanceStatusFilterView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAuthenticated]
     def get(self, request):
         active_param = request.GET.get('active')  # ?active=true or false
         if active_param is not None:
@@ -80,7 +80,7 @@ class AmbulanceStatusFilterView(APIView):
 
 # ------------------------------------Ambulance Delete --------------------------------------------
 class AmbulanceDeleteView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAmbulance | IsAdmin]
     def delete(self, request, ambulance_id, vehicle_number):
         # Get the user by custom user_id
         user = get_object_or_404(User, user_id=ambulance_id)
@@ -96,7 +96,7 @@ class AmbulanceDeleteView(APIView):
 
 # -------------------------------------Areawise ambulance search-------------------------------------
 class AmbulanceSearchByAreaView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAuthenticated]
     def get(self, request, service_area):
         ambulances = Ambulance.objects.filter(service_area__icontains=service_area)
         if not ambulances.exists():

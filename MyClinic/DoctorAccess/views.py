@@ -9,7 +9,7 @@ from LoginAccess.models import User
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from MyClinic.permissions import IsDoctor, IsPatient, IsReadOnly
+from MyClinic.permissions import IsDoctor, IsPatient, IsReadOnly, IsAdmin
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
@@ -39,7 +39,7 @@ class DoctorRegistrationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class DoctorProfileAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 #------------------------------------------------- Doctor get-all or get by ID functionality----------------------------------------------------------------
     def get(self, request, doctor_id=None):
         if doctor_id:
@@ -80,7 +80,7 @@ class DoctorProfileAPIView(APIView):
                 
 #------------------------------------------------- Doctor get by Specialisation functionality----------------------------------------------------------------
 class DoctorSpecialist(APIView):
-    permission_classes =[AllowAny]
+    permission_classes =[IsAuthenticated]
     def get(self, request, specialist):
         doctor = DoctorRegistration.objects.filter(specialist = specialist)
         if doctor.exists():
@@ -89,7 +89,7 @@ class DoctorSpecialist(APIView):
         return Response ({"message": f"No doctors avialable with specialist '{specialist}'"}, status=status.HTTP_404_NOT_FOUND)
     
 class DoctorAppointmentView(APIView):
-    permission_classes=[AllowAny]
+    permission_classes=[IsAuthenticated]
     def post(self, request, format=None):
         serializer = DoctorAppointmentSerializer(data=request.data)
         if serializer.is_valid():
@@ -225,10 +225,10 @@ class AppointmentChecked(APIView):
 class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
     queryset = DoctorAvailability.objects.all()
     serializer_class = DoctorAvailabilitySerializer
-    permission_classes = [IsDoctor | IsPatient]
+    permission_classes = [IsDoctor | IsPatient | IsAdmin]
 
     def get_queryset(self):
-        if self.request.user.role == 'patient':
+        if self.request.user.role == 'patient' or self.request.user.is_admin:
             return DoctorAvailability.objects.all()
         elif self.request.user.role == 'doctor':
             return DoctorAvailability.objects.filter(doctor=self.request.user)

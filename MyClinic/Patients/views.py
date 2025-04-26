@@ -33,7 +33,7 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
 class PrescriptionViewSet(viewsets.ModelViewSet):
     queryset = Prescription.objects.all()
     serializer_class = PrescriptionSerializer
-    permission_classes = [IsPatient | IsDoctor | IsLab] # change to patient, doctor, lab
+    permission_classes = [IsPatient | IsDoctor | IsLab] 
 
     def get_queryset(self):
         user = self.request.user
