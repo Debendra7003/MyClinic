@@ -105,6 +105,9 @@ class LabTestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        registration_number = self.request.query_params.get('registration_number', None)
+        if registration_number:
+            return LabTest.objects.filter(registration_number=registration_number)
         if user.role == 'lab':
             if hasattr(user, 'lab_profile'):
                 return LabTest.objects.filter(lab_profile=user.lab_profile)

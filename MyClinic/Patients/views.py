@@ -37,8 +37,12 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        patient_user_id = self.request.query_params.get('patient_user_id', None)
         if user.is_staff:
             return Prescription.objects.all()
+        if patient_user_id:
+            return Prescription.objects.filter(patient__user__user_id=patient_user_id)
+
         return Prescription.objects.filter(patient__user=user)
     def perform_create(self, serializer):
         
@@ -56,8 +60,11 @@ class InsuranceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        patient_user_id = self.request.query_params.get('patient_user_id', None)
         if user.is_staff:
             return Insurance.objects.all()
+        if patient_user_id and (user.is_staff or user.role=="doctor"):
+            return Insurance.objects.filter(user__user_id=patient_user_id)
         return Insurance.objects.filter(user=user)
     def perform_create(self, serializer):
         try:

@@ -2,8 +2,11 @@ import uuid
 from django.db import models
 from Patients.models import PatientProfile
 from django.contrib.auth import get_user_model
+import random
 
 User = get_user_model()
+def generate_registration_number():
+    return str(random.randint(1000000000, 9999999999))
 
 class LabProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -56,6 +59,8 @@ class LabTest(models.Model):
         ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
     ], default='SCHEDULED')
+    registration_number = models.CharField(max_length=10, unique=True, default=generate_registration_number, editable=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

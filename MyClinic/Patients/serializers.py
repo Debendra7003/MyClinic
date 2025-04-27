@@ -13,7 +13,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Prescription
         fields = ['id', 'file', 'description', 'uploaded_at', 'patient', 'patient_user_id']
-        read_only_fields = ['id', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at','patient']
 
 class InsuranceSerializer(serializers.ModelSerializer):
     patient_user_id = serializers.CharField(source='user.user_id', read_only = True)

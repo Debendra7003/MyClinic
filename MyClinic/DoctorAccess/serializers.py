@@ -56,5 +56,5 @@ class AppointmentCheckedSerializer(serializers.ModelSerializer):
 class DoctorAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorAvailability
-        fields = ['id', 'doctor', 'date','time','available', 'shift', 'created_at']
+        fields = ['id', 'doctor', 'date','start_time','end_time','available', 'shift', 'created_at']
         read_only_fields = ['id', 'created_at','doctor']

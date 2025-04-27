@@ -37,7 +37,7 @@ class LabTestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LabTest
-        fields = ['id', 'patient','lab_profile', 'test_type', 'scheduled_date', 'status', 'created_at', 'reports']
+        fields = ['id', 'patient','lab_profile', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
     def validate(self, data):
         if self.context['request'].user.role != 'patient':

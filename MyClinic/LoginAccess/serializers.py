@@ -56,17 +56,40 @@ class FirebaseTokenSerializer(serializers.Serializer):
 class GoogleSignInSerializer(serializers.Serializer):
     id_token = serializers.CharField()
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default='patient')
-    mobile_number = serializers.CharField()
+    mobile_number = serializers.CharField(required=False)
     def validate(self, data):
         id_token = data.get('id_token')
         role = data.get('role', 'patient')
         mobile_number = data.get('mobile_number')
         try:
+            # Verify the Firebase token and get the user
+            user = handle_firebase_token(id_token, role, mobile_number)
+
+            # If the user is not found and mobile_number is missing, raise an error
+            if not user and not mobile_number:
+                raise serializers.ValidationError("Mobile number is required for new users.")
+
+            # If the user exists, mobile_number is not required
+            if user:
+                data['user'] = user
+                return data
+
+            # If the user does not exist, ensure mobile_number is provided
+            if not mobile_number:
+                raise serializers.ValidationError("Mobile number is required for new users.")
+
             user = handle_firebase_token(id_token, role, mobile_number)
             data['user'] = user
             return data
+
         except ValueError as e:
             raise serializers.ValidationError(str(e))
+        # try:
+        #     user = handle_firebase_token(id_token, role, mobile_number)
+        #     data['user'] = user
+        #     return data
+        # except ValueError as e:
+        #     raise serializers.ValidationError(str(e))
 
 
 
