@@ -66,6 +66,25 @@ class DoctorAppointmentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'booked_at', 'registration_number', 'estimated_time']
 
+    def validate(self, data):
+        doctor_id = data.get('doctor_id')
+        date_of_visit = data.get('date_of_visit')
+        shift = data.get('shift')
+        visit_time = data.get('visit_time')
+
+        if DoctorAppointment.objects.filter(
+            doctor_id=doctor_id,
+            date_of_visit=date_of_visit,
+            shift=shift,
+            visit_time=visit_time,
+            cancelled=False
+        ).exists():
+            raise serializers.ValidationError(
+                {"visit_time": "This visit time is already booked for the selected shift and date."}
+            )
+
+        return data
+    
     def get_estimated_time(self, obj):
         return obj.calculate_estimated_time()
     
