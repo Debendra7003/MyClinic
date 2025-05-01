@@ -11,7 +11,7 @@ class DoctorRegistration(models.Model):
     clinic_name = models.CharField(max_length=100)
     clinic_address = models.CharField(max_length=100)
     experience = models.IntegerField()
-    status = models.CharField(max_length=10)
+    status = models.BooleanField(default=False)
     profile_image = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -62,11 +62,30 @@ class DoctorAppointment(models.Model):
             ('evening', 'Evening'),
             ('night', 'Night')])
     visit_time = models.TimeField()
+    delay_minutes = models.IntegerField(default=0)
     booked_at=models.DateTimeField(auto_now_add=True)
     checked = models.BooleanField(default=False)
     cancelled = models.BooleanField(default=False)
     registration_number = models.CharField(max_length=10, unique=True, default=generate_registration_number, editable=False)
 
+    def calculate_estimated_time(self):
+        """
+        Calculate the estimated time for the patient to see the doctor.
+        """
+        appointments = DoctorAppointment.objects.filter(
+            doctor_id=self.doctor_id,
+            date_of_visit=self.date_of_visit,
+            shift=self.shift,
+            cancelled=False
+        ).order_by('visit_time')
+
+        completed_appointments = appointments.filter(checked=True).count()
+        # position_in_queue = list(appointments).index(self)
+        position_in_queue = appointments.filter(visit_time__lt=self.visit_time).count()
+
+        # Assuming each appointment takes 15 minutes on average
+        estimated_time = (position_in_queue - completed_appointments) * 15 + self.delay_minutes
+        return estimated_time
     def __str__(self):
         return f"{self.registration_number} - {self.doctor_name} -> {self.patient_name}"
 

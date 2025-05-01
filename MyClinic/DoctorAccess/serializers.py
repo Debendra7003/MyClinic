@@ -13,7 +13,7 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
             'doctor', 'doctor_user_id', 'doctor_name', 'specialist', 'license_number',
             'clinic_name', 'clinic_address', 'experience', 'status', 'profile_image'
         ]
-
+        read_only_fields = ['status']
     def get_doctor_user_id(self, obj):
         return obj.doctor.user_id
 
@@ -36,15 +36,15 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"doctor": "Doctor with this user_id does not exist."})
         return super().update(instance, validated_data)
     
-class DoctorAppointmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DoctorAppointment
-        fields = [
-            'id', 'doctor_id', 'doctor_name', 'specialist', 'patient_id',
-            'patient_name', 'patient_number', 'patient_age', 'patient_gender',
-            'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number', 'checked', 'cancelled'
-        ]
-        read_only_fields = ['id', 'booked_at', 'registration_number']
+# class DoctorAppointmentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = DoctorAppointment
+#         fields = [
+#             'id', 'doctor_id', 'doctor_name', 'specialist', 'patient_id',
+#             'patient_name', 'patient_number', 'patient_age', 'patient_gender',
+#             'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number', 'checked', 'cancelled'
+#         ]
+#         read_only_fields = ['id', 'booked_at', 'registration_number']
 
 class AppointmentCheckedSerializer(serializers.ModelSerializer):
     checked = serializers.BooleanField(required=True)
@@ -53,6 +53,22 @@ class AppointmentCheckedSerializer(serializers.ModelSerializer):
         model = DoctorAppointment
         fields = ['checked']
 
+class DoctorAppointmentSerializer(serializers.ModelSerializer):
+    estimated_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DoctorAppointment
+        fields = [
+            'id', 'doctor_id', 'doctor_name', 'specialist', 'patient_id',
+            'patient_name', 'patient_number', 'patient_age', 'patient_gender',
+            'date_of_visit', 'shift', 'visit_time', 'booked_at', 'registration_number',
+            'checked', 'cancelled', 'delay_minutes', 'estimated_time'
+        ]
+        read_only_fields = ['id', 'booked_at', 'registration_number', 'estimated_time']
+
+    def get_estimated_time(self, obj):
+        return obj.calculate_estimated_time()
+    
 class DoctorAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorAvailability

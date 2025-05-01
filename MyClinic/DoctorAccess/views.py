@@ -272,3 +272,40 @@ class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
 
         self.perform_destroy(instance)
         return Response({"message": "Availability deleted successfully."}, status=status.HTTP_200_OK)
+
+
+class NotifyShiftDelay(APIView):
+    permission_classes = [IsDoctor]
+
+    def post(self, request):
+        try:
+            doctor = request.user
+            shift = request.data.get('shift')
+            date_of_visit = request.data.get('date_of_visit')
+            delay_minutes = int(request.data.get('delay_minutes', 0))
+
+            if not shift or not date_of_visit:
+                return Response({"error": "Shift and date_of_visit are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Update delay_minutes for all appointments in the shift
+            appointments = DoctorAppointment.objects.filter(
+                doctor_id=doctor,
+                date_of_visit=date_of_visit,
+                shift=shift,
+                cancelled=False
+            )
+            appointments.update(delay_minutes=delay_minutes)
+
+            # Notify all patients in the shift
+            for appointment in appointments:
+                if appointment.patient_id.firebase_registration_token:
+                    send_push_notification(
+                        registration_token=appointment.patient_id.firebase_registration_token,
+                        title="Appointment Delay Notification",
+                        body=f"Your appointment with Dr. {doctor.doctor_name} will be delayed by {delay_minutes} minutes.",
+                    )
+
+            return Response({"message": "Patients notified about the delay."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
