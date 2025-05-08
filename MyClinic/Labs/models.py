@@ -69,7 +69,7 @@ class LabTest(models.Model):
 class LabReport(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lab_test = models.ForeignKey(LabTest, on_delete=models.CASCADE, related_name='reports')
-    file = models.TextField()
+    file = models.FileField(upload_to='reports/',max_length=50)
     description = models.TextField(blank=True)
     published_at = models.DateTimeField(auto_now_add=True)
 
