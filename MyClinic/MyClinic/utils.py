@@ -9,12 +9,17 @@ def send_push_notification(registration_token, title, body, data=None):
     """
     try:
         message = messaging.Message(
+            token=registration_token,
             notification=messaging.Notification(
                 title=title,
                 body=body,
             ),
-            token=registration_token,
-            data=data or {},
+            data={
+        "title": title,
+        "body": body,
+        **(data or {})
+    },
+            # data=data or {},
         )
         response = messaging.send(message)
         return response
@@ -30,6 +35,8 @@ def send_scheduled_push_notification(registration_token, title, body, delivery_t
     """
     try:
         # Convert delivery_time to ISO 8601 format
+        if isinstance(delivery_time, datetime.date) and not isinstance(delivery_time, datetime.datetime):
+            delivery_time = datetime.combine(delivery_time, datetime.min.time())
         delivery_time_iso = delivery_time.isoformat() + "Z"
         print("Scheduled Working..")
         message = messaging.Message(
@@ -48,7 +55,12 @@ def send_scheduled_push_notification(registration_token, title, body, delivery_t
                     "apns-expiration": str(int(delivery_time.timestamp()))
                 }
             ),
-            data=data or {},
+            data={
+        "title": title,
+        "body": body,
+        **(data or {})
+    },
+            # data=data or {},
         )
         response = messaging.send(message)
         return response

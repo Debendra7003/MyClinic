@@ -14,7 +14,7 @@ from MyClinic.permissions import IsAmbulance, IsReadOnly, IsAdmin
 
 # ----------------------------------- New Ambulance Register ------------------------------------------------
 class AmbulanceView(APIView):
-    permission_classes=[IsAmbulance]
+    permission_classes=[AllowAny]
     def post(self, request):
         serializer = AmbulanceSerializer(data=request.data)
         if serializer.is_valid():
