@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import auth
 from .models import generate_customer_id
 from .authentication import handle_firebase_token
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -92,7 +93,30 @@ class GoogleSignInSerializer(serializers.Serializer):
         #     raise serializers.ValidationError(str(e))
 
 
+# New serializer for email OTP verification
+class EmailOTPVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
 
+    def validate(self, data):
+        email = data.get('email')
+        otp = data.get('otp')
+
+        if not email or not otp:
+            raise serializers.ValidationError("Email and OTP are required")
+
+        try:
+            user = User.objects.get(email=email)
+            if user.verification_expiry < timezone.now():
+                raise serializers.ValidationError("OTP has expired")
+            if user.email_otp != otp:
+                raise serializers.ValidationError("Invalid OTP")
+            data['user'] = user
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this email not found")
+
+        return data
+  
 
 
 

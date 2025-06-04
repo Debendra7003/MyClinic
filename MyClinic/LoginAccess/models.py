@@ -55,12 +55,17 @@ class User(AbstractBaseUser):
     email = models.EmailField(max_length=100,unique=True, null=True, blank=True)
     mobile_number = models.CharField(max_length=20,unique=True)
     role = models.CharField(max_length=100,choices=ROLE_CHOICES)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
     firebase_registration_token = models.TextField(blank=True, null=True)
-    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True) 
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    email_otp = models.CharField(max_length=6, blank=True, null=True)
+    verification_expiry = models.DateTimeField(blank=True, null=True)
+    can_reset_password = models.BooleanField(default=False)
+ 
 
     objects = UserManager()
     USERNAME_FIELD = "mobile_number"
@@ -84,3 +89,15 @@ class User(AbstractBaseUser):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_admin
+    
+    def generate_otp(self):
+        return ''.join(random.choices(string.digits, k=6))
+    def set_email_otp(self):
+        self.email_otp = self.generate_otp()
+        self.verification_expiry = timezone.now() + timezone.timedelta(minutes=5)  # 5-minute expiry
+        self.save()
+
+    def set_sms_otp(self):
+        self.otp = self.generate_otp()
+        self.verification_expiry = timezone.now() + timezone.timedelta(minutes=5)
+        self.save()

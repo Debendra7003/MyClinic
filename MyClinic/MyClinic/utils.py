@@ -2,6 +2,7 @@ from firebase_admin import messaging
 from twilio.rest import Client
 from django.conf import settings
 from datetime import datetime, timedelta
+from django.core.mail import send_mail
 
 def send_push_notification(registration_token, title, body, data=None):
     """
@@ -85,3 +86,21 @@ def send_sms(to_number, message_body):
     except Exception as e:
         print(f"Error sending SMS: {e}")
         return None
+
+def send_email_message(subject, message, recipient_list, from_email=None, fail_silently=False, html_message=None):
+            """
+            Sends an email using send_mail function.
+            """
+            try:
+                result = send_mail(
+                    subject,
+                    message,
+                    from_email or settings.DEFAULT_FROM_EMAIL,
+                    recipient_list,
+                    fail_silently=fail_silently,
+                    html_message=html_message
+                )
+                return result
+            except Exception as e:
+                print(f"Error sending email: {e}")
+                return None
