@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .serializers import DoctorRegistrationSerializer,DoctorAppointmentSerializer, DoctorAvailabilitySerializer, AppointmentCheckedSerializer
+from .serializers import DoctorRegistrationSerializer,DoctorAppointmentSerializer, DoctorAvailabilitySerializer, AppointmentCheckedSerializer, AppointmentCancelledSerializer
 from .models import DoctorRegistration, DoctorAppointment, DoctorAvailability
 from LoginAccess.models import User
 from django.db import IntegrityError
@@ -213,6 +213,27 @@ class AppointmentChecked(APIView):
             #         )
 
             return Response({"message": "Checked field updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AppointmentCancelled(APIView):
+    permission_classes = [IsDoctor | IsPatient]
+
+    def patch(self, request, registration_number):
+        try:
+            doctor = DoctorAppointment.objects.get(registration_number=registration_number)
+        except DoctorAppointment.DoesNotExist:
+            return Response({"error": "Appointment with the given registration number not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if 'cancelled' not in request.data:
+            return Response({"error": "'cancelled' field is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AppointmentCancelledSerializer(doctor, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Cancelled field updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
 
 
 

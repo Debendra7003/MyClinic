@@ -52,6 +52,12 @@ class AppointmentCheckedSerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorAppointment
         fields = ['checked']
+class AppointmentCancelledSerializer(serializers.ModelSerializer):
+    cancelled = serializers.BooleanField(required=True)
+
+    class Meta:
+        model = DoctorAppointment
+        fields = ['cancelled']
 
 class DoctorAppointmentSerializer(serializers.ModelSerializer):
     estimated_time = serializers.SerializerMethodField()
