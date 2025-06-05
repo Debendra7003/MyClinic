@@ -87,7 +87,6 @@ class SMSOTPVerifyView(APIView):
                 customer.save()
                 return Response({
                     "message": "SMS OTP verified successfully",
-                    "is_verified": customer.is_verified
                 }, status=status.HTTP_200_OK)
             return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:

@@ -182,35 +182,58 @@ class AppointmentChecked(APIView):
                 )
 
             # # Notify all patients booked on the same day
-            # same_day_appointments = DoctorAppointment.objects.filter(
-            #     doctor_id=doctor.doctor_id,
-            #     date_of_visit=doctor.date_of_visit,
-            #     shift=doctor.shift,
-            #     cancelled=False
-            # ).order_by('visit_time')
-            # print(same_day_appointments)
-            # for appt in same_day_appointments:
-            #     print(appt)
-            #     if appt.checked:
-            #         continue  # Skip already completed appointments
-            #     print("Here It is!!")
-            #     if appt.registration_number == registration_number:
-            #         # Notify the patient whose appointment is being marked as completed
-            #         if appt.patient_id.firebase_registration_token:
-            #             send_push_notification(
-            #                 registration_token=appt.patient_id.firebase_registration_token,
-            #                 title="Appointment Completed",
-            #                 body=f"Your appointment with Dr. {appt.doctor_name} has been completed.",
-            #             )
-            #         break  # Stop notifying further once the current appointment is completed
-            #     print("Also Here It is!!")
-            #     # Notify other patients about the progress
-            #     if appt.patient_id.firebase_registration_token:
-            #         send_push_notification(
-            #             registration_token=appt.patient_id.firebase_registration_token,
-            #             title="Appointment Progress",
-            #             body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
-            #         )
+            same_day_appointments = DoctorAppointment.objects.filter(
+                doctor_id=doctor.doctor_id,
+                date_of_visit=doctor.date_of_visit,
+                shift=doctor.shift,
+                cancelled=False
+            ).order_by('visit_time')
+            print(same_day_appointments)
+            for appt in same_day_appointments:
+                print(appt)
+                if appt.checked:
+                    continue  # Skip already completed appointments
+                print("Here It is!!")
+                if appt.registration_number == registration_number:
+                    # Notify the patient whose appointment is being marked as completed
+                    if appt.patient_id.firebase_registration_token:
+                        send_push_notification(
+                            registration_token=appt.patient_id.firebase_registration_token,
+                            title="Appointment Completed",
+                            body=f"Your appointment with Dr. {appt.doctor_name} has been completed.",
+                        )
+                    break  # Stop notifying further once the current appointment is completed
+                print("Also Here It is!!")
+                # Notify other patients about the progress
+                if appt.patient_id.firebase_registration_token:
+                    estimated_time = appt.calculate_estimated_time()
+                    if estimated_time==0:
+                        send_push_notification(
+                        registration_token=appt.patient_id.firebase_registration_token,
+                        title="Appointment Progress",
+                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                         body=(
+                                f"Appointment {appt.registration_number} has been completed. "
+                                f"Your turn is next."),
+                    )
+                    elif estimated_time<0:
+                        send_push_notification(
+                        registration_token=appt.patient_id.firebase_registration_token,
+                        title="Appointment Progress",
+                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                         body=(
+                                f"Appointment {appt.registration_number} has been completed. "
+                                f"Your Waiting Time: {estimated_time} minutes."),
+                    )
+                    else:
+                        send_push_notification(
+                        registration_token=appt.patient_id.firebase_registration_token,
+                        title="Appointment Progress",
+                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                         body=(
+                                f"Appointment {appt.registration_number} has been completed. "
+                                f"Your turn is in next {estimated_time} minutes."),
+                    )
 
             return Response({"message": "Checked field updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
 
