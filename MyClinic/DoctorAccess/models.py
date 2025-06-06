@@ -1,6 +1,7 @@
 from django.db import models
 import random
 from LoginAccess.models import User
+from datetime import datetime, timedelta
 
 # Create your models here.
 class DoctorRegistration(models.Model):
@@ -68,10 +69,46 @@ class DoctorAppointment(models.Model):
     cancelled = models.BooleanField(default=False)
     registration_number = models.CharField(max_length=10, unique=True, default=generate_registration_number, editable=False)
 
+    # def calculate_estimated_time(self):
+    #     """
+    #     Calculate the estimated time for the patient to see the doctor.
+    #     """
+    #     appointments = DoctorAppointment.objects.filter(
+    #         doctor_id=self.doctor_id,
+    #         date_of_visit=self.date_of_visit,
+    #         shift=self.shift,
+    #         cancelled=False
+    #     ).order_by('visit_time')
+
+    #     completed_appointments = appointments.filter(checked=True).count()
+    #     # position_in_queue = list(appointments).index(self)
+    #     position_in_queue = appointments.filter(visit_time__lt=self.visit_time).count()
+
+    #     # Assuming each appointment takes 15 minutes on average
+    #     estimated_time = (position_in_queue - completed_appointments) * 15 + self.delay_minutes
+    #     return estimated_time
+    
+
+    def format_minutes(self, minutes):
+        hours = minutes // 60
+        mins = minutes % 60
+        if hours > 0 and mins > 0:
+            return f"{hours} hr {mins} mins"
+        elif hours > 0:
+            return f"{hours} hr"
+        else:
+            return f"{mins} mins"
+        
     def calculate_estimated_time(self):
         """
-        Calculate the estimated time for the patient to see the doctor.
+        Combines estimated queue-based waiting time with real-time appointment clock.
+        Returns both estimated and actual (clock) wait times.
         """
+        now = datetime.now()
+        appointment_time = datetime.combine(self.date_of_visit, self.visit_time)
+        real_wait = (appointment_time - now).total_seconds() / 60 # minutes
+        real_wait = max(0, int(real_wait))
+
         appointments = DoctorAppointment.objects.filter(
             doctor_id=self.doctor_id,
             date_of_visit=self.date_of_visit,
@@ -79,13 +116,16 @@ class DoctorAppointment(models.Model):
             cancelled=False
         ).order_by('visit_time')
 
-        completed_appointments = appointments.filter(checked=True).count()
-        # position_in_queue = list(appointments).index(self)
-        position_in_queue = appointments.filter(visit_time__lt=self.visit_time).count()
+        earlier_appointments = appointments.filter(visit_time__lt=self.visit_time)
+        pending_before_me = earlier_appointments.filter(checked=False).count()
 
-        # Assuming each appointment takes 15 minutes on average
-        estimated_time = (position_in_queue - completed_appointments) * 15 + self.delay_minutes
-        return estimated_time
+        estimated_wait = pending_before_me * 15 + self.delay_minutes
+
+        return {
+            "real_wait_minutes": self.format_minutes(real_wait),
+            "estimated_wait_minutes": self.format_minutes(estimated_wait)
+        }
+
     def __str__(self):
         return f"{self.registration_number} - {self.doctor_name} -> {self.patient_name}"
 

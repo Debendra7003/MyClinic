@@ -194,46 +194,63 @@ class AppointmentChecked(APIView):
                 if appt.checked:
                     continue  # Skip already completed appointments
                 print("Here It is!!")
-                if appt.registration_number == registration_number:
+                # if appt.registration_number == registration_number:
                     # Notify the patient whose appointment is being marked as completed
-                    if appt.patient_id.firebase_registration_token:
-                        send_push_notification(
-                            registration_token=appt.patient_id.firebase_registration_token,
-                            title="Appointment Completed",
-                            body=f"Your appointment with Dr. {appt.doctor_name} has been completed.",
-                        )
-                    break  # Stop notifying further once the current appointment is completed
+                    # if appt.patient_id.firebase_registration_token:
+                    #     send_push_notification(
+                    #         registration_token=appt.patient_id.firebase_registration_token,
+                    #         title="Appointment Completed",
+                    #         body=f"Your appointment with Dr. {appt.doctor_name} has been completed.",
+                    #     )
+                    # break  # Stop notifying further once the current appointment is completed
                 print("Also Here It is!!")
                 # Notify other patients about the progress
                 if appt.patient_id.firebase_registration_token:
-                    estimated_time = appt.calculate_estimated_time()
-                    if estimated_time==0:
-                        send_push_notification(
-                        registration_token=appt.patient_id.firebase_registration_token,
-                        title="Appointment Progress",
-                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
-                         body=(
-                                f"Appointment {appt.registration_number} has been completed. "
-                                f"Your turn is next."),
-                    )
-                    elif estimated_time<0:
-                        send_push_notification(
-                        registration_token=appt.patient_id.firebase_registration_token,
-                        title="Appointment Progress",
-                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
-                         body=(
-                                f"Appointment {appt.registration_number} has been completed. "
-                                f"Your Waiting Time: {estimated_time} minutes."),
-                    )
+                    combined_wait = appt.calculate_estimated_time()
+                    real_wait = combined_wait["real_wait_minutes"]
+                    estimated_wait = combined_wait["estimated_wait_minutes"]
+                    final_wait = max(real_wait, estimated_wait)
+                    if final_wait <= 0:
+                        body = "You are next. Please be ready."
+                    elif final_wait <= 10:
+                        body = f"Get ready! Your appointment is in approximately {final_wait}."
                     else:
-                        send_push_notification(
-                        registration_token=appt.patient_id.firebase_registration_token,
-                        title="Appointment Progress",
-                        # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
-                         body=(
-                                f"Appointment {appt.registration_number} has been completed. "
-                                f"Your turn is in next {estimated_time} minutes."),
-                    )
+                        body = f"Your appointment is estimated in {final_wait}. We will keep you updated."
+                    print("Estimated_time:",estimated_wait, "Real_wait:",real_wait, "Final_wait:",final_wait)
+                    print("Message body:", body)
+                    send_push_notification(
+                            registration_token=appt.patient_id.firebase_registration_token,
+                            title="Appointment Update",
+                            body=body)
+                    
+
+                    # if estimated_time==0:
+                    #     send_push_notification(
+                    #     registration_token=appt.patient_id.firebase_registration_token,
+                    #     title="Appointment Progress",
+                    #     # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                    #      body=(
+                    #             f"Appointment {appt.registration_number} has been completed. "
+                    #             f"Your turn is next."),
+                    # )
+                    # elif estimated_time<0:
+                    #     send_push_notification(
+                    #     registration_token=appt.patient_id.firebase_registration_token,
+                    #     title="Appointment Progress",
+                    #     # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                    #      body=(
+                    #             f"Appointment {appt.registration_number} has been completed. "
+                    #             f"Your Waiting Time: {estimated_time} minutes."),
+                    # )
+                    # else:
+                    #     send_push_notification(
+                    #     registration_token=appt.patient_id.firebase_registration_token,
+                    #     title="Appointment Progress",
+                    #     # body=f"Appointment {appt.registration_number} has been completed. Your turn is approaching.",
+                    #      body=(
+                    #             f"Appointment {appt.registration_number} has been completed. "
+                    #             f"Your turn is in next {estimated_time} minutes."),
+                    # )
 
             return Response({"message": "Checked field updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
 
