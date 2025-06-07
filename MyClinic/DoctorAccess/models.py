@@ -2,7 +2,8 @@ from django.db import models
 import random
 from LoginAccess.models import User
 from datetime import datetime, timedelta
-
+from django.utils import timezone
+import pytz
 # Create your models here.
 class DoctorRegistration(models.Model):
     doctor = models.ForeignKey(User,on_delete= models.CASCADE, related_name='Doctor_id')
@@ -104,8 +105,10 @@ class DoctorAppointment(models.Model):
         Combines estimated queue-based waiting time with real-time appointment clock.
         Returns both estimated and actual (clock) wait times.
         """
-        now = datetime.now()
+        ist = pytz.timezone('Asia/Kolkata')
+        now = timezone.now().astimezone(ist)
         appointment_time = datetime.combine(self.date_of_visit, self.visit_time)
+        appointment_time = ist.localize(appointment_time)
         real_wait = (appointment_time - now).total_seconds() / 60 # minutes
         real_wait = max(0, int(real_wait))
 
@@ -122,8 +125,10 @@ class DoctorAppointment(models.Model):
         estimated_wait = pending_before_me * 15 + self.delay_minutes
 
         return {
-            "real_wait_minutes": self.format_minutes(real_wait),
-            "estimated_wait_minutes": self.format_minutes(estimated_wait)
+            "real_wait_minutes": real_wait,
+            "real_wait_display": self.format_minutes(real_wait),
+            "estimated_wait_minutes": estimated_wait,
+            "estimated_wait_display": self.format_minutes(estimated_wait)
         }
 
     def __str__(self):

@@ -12,12 +12,11 @@ from django.db.models import Q
 from MyClinic.permissions import IsDoctor, IsPatient, IsReadOnly, IsAdmin
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from datetime import datetime
+from datetime import datetime, timedelta
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from MyClinic.utils import send_push_notification, send_scheduled_push_notification
-from datetime import timedelta
-
+from .tasks import send_appointment_reminder
 
 #------------------------------------------------- Doctor Register functionality-----------------------------------------------------------
 class DoctorRegistrationView(APIView):
@@ -107,12 +106,22 @@ class DoctorAppointmentView(APIView):
                 # Schedule a notification for the patient a day before the appointment
                 patient = appointment.patient_id
                 if patient.firebase_registration_token:
-                    send_scheduled_push_notification(
-                        registration_token=patient.firebase_registration_token,
-                        title="Appointment Reminder",
-                        body=f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
-                        delivery_time=appointment.date_of_visit - timedelta(days=1),
+                    scheduled_time = datetime.combine(appointment.date_of_visit, appointment.visit_time) - timedelta(days=1)
+                    send_appointment_reminder.apply_async(
+                        args=[
+                            patient.firebase_registration_token,
+                            "Appointment Reminder",
+                            "Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
+                            None
+                        ],
+                        eta=scheduled_time
                     )
+                    # send_scheduled_push_notification(
+                    #     registration_token=patient.firebase_registration_token,
+                    #     title="Appointment Reminder",
+                    #     body=f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
+                    #     delivery_time=appointment.date_of_visit - timedelta(days=1),
+                    # )
 
                 return Response({
                     "message": "Appointment booked successfully",
@@ -209,14 +218,18 @@ class AppointmentChecked(APIView):
                     combined_wait = appt.calculate_estimated_time()
                     real_wait = combined_wait["real_wait_minutes"]
                     estimated_wait = combined_wait["estimated_wait_minutes"]
+                    real_wait_display = combined_wait["real_wait_display"]
+                    estimated_wait_display = combined_wait["estimated_wait_display"]
                     final_wait = max(real_wait, estimated_wait)
+                    final_wait_display = combined_wait["real_wait_display"] if real_wait >= estimated_wait else combined_wait["estimated_wait_display"]
+
                     if final_wait <= 0:
                         body = "You are next. Please be ready."
                     elif final_wait <= 10:
-                        body = f"Get ready! Your appointment is in approximately {final_wait}."
+                        body = f"Get ready! Your appointment is in approximately {final_wait_display}."
                     else:
-                        body = f"Your appointment is estimated in {final_wait}. We will keep you updated."
-                    print("Estimated_time:",estimated_wait, "Real_wait:",real_wait, "Final_wait:",final_wait)
+                        body = f"Your appointment is estimated in {final_wait_display}. We will keep you updated."
+                    print("Estimated_time:",estimated_wait, "Real_wait:",real_wait, "Final_wait:",final_wait, "Final_wait_display:",final_wait_display, "Real_wait_display:",real_wait_display, "Estimated_wait_display:",estimated_wait_display)
                     print("Message body:", body)
                     send_push_notification(
                             registration_token=appt.patient_id.firebase_registration_token,
