@@ -3,18 +3,42 @@ from .models import LabTest, LabReport, LabProfile, LabType
 from Patients.serializers import PatientProfileSerializer
 
 
+class SimpleLabProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LabProfile
+        fields = ['id', 'name', 'address', 'phone']
+
+
 class LabTypeSerializer(serializers.ModelSerializer):
+    lab_profiles = SimpleLabProfileSerializer(source="labs",many=True, read_only=True)
     class Meta:
         model = LabType
-        fields = ['id', 'name', 'tests', 'lab_profile']
+        fields = ['id', 'name', 'tests', 'lab_profiles']
         read_only_fields = ['id']
 
 class LabProfileSerializer(serializers.ModelSerializer):
-    lab_types = LabTypeSerializer(many=True, read_only=True)
+     # For write (input)
+    lab_types = serializers.PrimaryKeyRelatedField(queryset=LabType.objects.all(), many=True, write_only=True)
+    # For read (output)
+    lab_types_details = LabTypeSerializer(source='lab_types', many=True, read_only=True)
     class Meta:
         model = LabProfile
-        fields = ['id', 'user', 'name', 'lab_types','address', 'phone', 'home_sample_collection', 'created_at']
+        fields = ['id', 'user', 'name', 'lab_types','lab_types_details','address', 'phone', 'home_sample_collection', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
+    def create(self, validated_data):
+        lab_types = validated_data.pop('lab_types', [])
+        lab_profile = LabProfile.objects.create(**validated_data)
+        lab_profile.lab_types.set(lab_types)
+        return lab_profile
+
+    def update(self, instance, validated_data):
+        lab_types = validated_data.pop('lab_types', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if lab_types is not None:
+            instance.lab_types.set(lab_types)
+        return instance
 
 
 

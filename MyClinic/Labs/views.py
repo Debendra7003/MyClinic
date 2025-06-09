@@ -77,20 +77,30 @@ class LabTypeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
     
     def perform_create(self, serializer):
-        if not hasattr(self.request.user, 'lab_profile'):
-            raise serializers.ValidationError("Only labs can create lab types.")
-        serializer.save(lab_profile=self.request.user.lab_profile)
-    
+        # lab_type = serializer.save()
+        # if hasattr(self.request.user, 'lab_profile'):
+        #     lab_type.lab_profiles.add(self.request.user.lab_profile)
+        # else:
+        #     raise serializers.ValidationError("Only labs can create lab types.")
+        # if not hasattr(self.request.user, 'lab_profile'):
+        #     raise serializers.ValidationError("Only labs can create lab types.")
+        # serializer.save(lab_profile=self.request.user.lab_profile)
+        serializer.save()
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.lab_profile.user != request.user or self.request.user.role != 'lab':
+        # if instance.lab_profile.user != request.user or self.request.user.role != 'lab':
+        #     raise serializers.ValidationError("You are not authorized to update this lab type.")
+        if not hasattr(request.user, 'lab_profile') or request.user.lab_profile not in instance.lab_profiles.all():
             raise serializers.ValidationError("You are not authorized to update this lab type.")
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.lab_profile.user != request.user or self.request.user.role != 'lab':
-            raise serializers.ValidationError("You are not authorized to delete this lab type.")
+        # if instance.lab_profile.user != request.user or self.request.user.role != 'lab':
+        #     raise serializers.ValidationError("You are not authorized to delete this lab type.")
+        if not hasattr(request.user, 'lab_profile') or request.user.lab_profile not in instance.lab_profiles.all():
+            raise serializers.ValidationError("You are not authorized to update this lab type.")
         return super().destroy(request, *args, **kwargs)
 
 

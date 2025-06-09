@@ -15,7 +15,7 @@ class LabProfile(models.Model):
     address = models.TextField()
     phone = models.CharField(max_length=20)
     home_sample_collection = models.BooleanField(default=False)
-    # lab_types = models.ManyToManyField('LabType', related_name='labs')
+    lab_types = models.ManyToManyField('LabType', related_name='labs')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -24,7 +24,7 @@ class LabProfile(models.Model):
 
 class LabType(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lab_profile = models.ForeignKey(LabProfile, on_delete=models.CASCADE, related_name='lab_types')
+    # lab_profile = models.ForeignKey(LabProfile, on_delete=models.CASCADE, related_name='lab_types')
     name = models.CharField(max_length=255, unique=True)
     tests = models.JSONField(default=list)
 
