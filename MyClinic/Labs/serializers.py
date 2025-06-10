@@ -6,7 +6,7 @@ from Patients.serializers import PatientProfileSerializer
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = LabProfile
-        fields = ['id', 'name', 'address', 'phone']
+        fields = ['id','user','home_sample_collection', 'name', 'address', 'phone']
 
 
 class LabTypeSerializer(serializers.ModelSerializer):
@@ -64,8 +64,10 @@ class LabTestSerializer(serializers.ModelSerializer):
         fields = ['id', 'patient','lab_profile', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
     def validate(self, data):
-        if self.context['request'].user.role != 'patient':
-            raise serializers.ValidationError("Only patients can book lab tests.")
+        request = self.context['request']
+        if request.method == 'POST':  # Only restrict creation
+            if request.user.role != 'patient':
+                raise serializers.ValidationError("Only patients can book lab tests.")
         return data
 
 
