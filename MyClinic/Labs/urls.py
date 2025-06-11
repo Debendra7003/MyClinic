@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import LabTestViewSet, LabReportViewSet, LabProfileViewSet, LabTypeViewSet, LabSearchViewSet
+from .views import LabTestViewSet, LabReportViewSet, LabProfileViewSet, LabTypeViewSet, LabSearchViewSet, CentralSearchView
 
 
 router = DefaultRouter()
@@ -11,5 +11,6 @@ router.register(r'lab-types', LabTypeViewSet)
 router.register(r'lab-search', LabSearchViewSet, basename='lab-search')
 
 urlpatterns = [
+    path('search/', CentralSearchView.as_view(), name='central-search'),
     path('', include(router.urls)),
 ]

@@ -1,5 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import LabTest, LabReport, LabProfile, LabType
 from .serializers import LabTestSerializer, LabReportSerializer, LabProfileSerializer, LabTypeSerializer
 from Patients.models import PatientProfile
@@ -13,6 +14,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django_filters import rest_framework as filters
 from django.db import models
+from DoctorAccess.models import DoctorRegistration
+from LoginAccess.models import User
 
 def schedule_lab_test_notifications(lab_test):
     patient = lab_test.patient
@@ -241,3 +244,44 @@ class LabSearchViewSet(viewsets.ReadOnlyModelViewSet):
         return LabProfile.objects.prefetch_related('lab_types')
     
  
+
+class CentralSearchView(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request):
+        query = request.GET.get('q', '')
+        # Doctor search
+        doctors = DoctorRegistration.objects.filter(
+            models.Q(doctor_name__icontains=query) |
+            models.Q(specialist__icontains=query) |
+            models.Q(doctor__first_name__icontains=query) |
+            models.Q(doctor__last_name__icontains=query)
+)
+        
+        doctor_users = User.objects.filter(
+            role='doctor'
+        ).filter(
+            models.Q(first_name__icontains=query) |
+            models.Q(last_name__icontains=query)
+        )
+        # Lab search
+        labs = LabProfile.objects.filter(
+            models.Q(name__icontains=query) |
+            models.Q(lab_types__name__icontains=query) |
+            models.Q(lab_types__tests__icontains=query)
+        ).distinct()
+        # LabType search
+        lab_types = LabType.objects.filter(
+            models.Q(name__icontains=query) |
+            models.Q(tests__icontains=query)
+        ).distinct()
+
+        from DoctorAccess.serializers import DoctorRegistrationSerializer
+        from Labs.serializers import LabProfileSerializer, LabTypeSerializer
+        from LoginAccess.serializers import UserSerializer
+
+        return Response({
+            "doctors": DoctorRegistrationSerializer(doctors, many=True).data,
+            "labs": LabProfileSerializer(labs, many=True).data,
+            "lab_types": LabTypeSerializer(lab_types, many=True).data,
+            "doctor_users": UserSerializer(doctor_users, many=True).data,
+        })
