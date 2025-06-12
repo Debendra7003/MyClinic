@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.shortcuts import get_object_or_404
 from LoginAccess.models import User
 from MyClinic.permissions import IsAmbulance, IsReadOnly, IsAdmin
-
+from django.db.models import Q
 # Create your views here.
 
 # ----------------------------------- New Ambulance Register ------------------------------------------------
@@ -56,27 +56,60 @@ class AmbulanceByUserView(APIView):
     
 # ------------------------------------Get Active or Iactive Ambulance----------------------------
 class AmbulanceStatusFilterView(APIView):
-    permission_classes=[IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         active_param = request.GET.get('active')  # ?active=true or false
+        location = request.GET.get('location')    # ?location=Somewhere
+
+        ambulances = Ambulance.objects.all()
+        status_label = "all"
+
         if active_param is not None:
             if active_param.lower() == "true":
-                ambulances = Ambulance.objects.filter(active=True)
+                ambulances = ambulances.filter(active=True)
                 status_label = "active"
             elif active_param.lower() == "false":
-                ambulances = Ambulance.objects.filter(active=False)
+                ambulances = ambulances.filter(active=False)
                 status_label = "inactive"
             else:
                 return Response({"error": "Invalid value for 'active'. Use 'true' or 'false'."}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            ambulances = Ambulance.objects.all()
-            status_label = "all"
+
+        if location:
+            ambulances = ambulances.filter(
+                Q(location__icontains=location) |
+                Q(location__isnull=True) |
+                Q(location__exact='')
+            )
 
         serializer = AmbulanceSerializer(ambulances, many=True)
         return Response({
             "status": status_label,
             "ambulances": serializer.data
         }, status=status.HTTP_200_OK)
+
+
+# class AmbulanceStatusFilterView(APIView):
+#     permission_classes=[IsAuthenticated]
+#     def get(self, request):
+#         active_param = request.GET.get('active')  # ?active=true or false
+#         if active_param is not None:
+#             if active_param.lower() == "true":
+#                 ambulances = Ambulance.objects.filter(active=True)
+#                 status_label = "active"
+#             elif active_param.lower() == "false":
+#                 ambulances = Ambulance.objects.filter(active=False)
+#                 status_label = "inactive"
+#             else:
+#                 return Response({"error": "Invalid value for 'active'. Use 'true' or 'false'."}, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             ambulances = Ambulance.objects.all()
+#             status_label = "all"
+
+#         serializer = AmbulanceSerializer(ambulances, many=True)
+#         return Response({
+#             "status": status_label,
+#             "ambulances": serializer.data
+#         }, status=status.HTTP_200_OK)
 
 # ------------------------------------Ambulance Delete --------------------------------------------
 class AmbulanceDeleteView(APIView):

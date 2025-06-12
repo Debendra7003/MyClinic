@@ -11,7 +11,7 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
         model = DoctorRegistration
         fields = [
             'doctor', 'doctor_user_id', 'doctor_name', 'specialist', 'license_number',
-            'clinic_name', 'clinic_address', 'experience', 'status', 'profile_image'
+            'clinic_name', 'clinic_address','location', 'experience', 'status', 'profile_image'
         ]
         read_only_fields = ['status']
     def get_doctor_user_id(self, obj):

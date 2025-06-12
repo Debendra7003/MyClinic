@@ -12,6 +12,7 @@ class DoctorRegistration(models.Model):
     license_number = models.CharField(max_length=100, unique= True)
     clinic_name = models.CharField(max_length=100)
     clinic_address = models.CharField(max_length=100)
+    location = models.CharField(max_length=100, blank=True, null=True)
     experience = models.IntegerField()
     status = models.BooleanField(default=False)
     profile_image = models.TextField(blank=True, null=True)
@@ -38,7 +39,9 @@ class DoctorAvailability(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('doctor', 'date', 'shift')
+        # unique_together = ('doctor', 'date', 'shift')
+        unique_together = ('doctor', 'date', 'start_time', 'end_time', 'shift')
+
 
     def __str__(self):
         return f"{self.doctor} - {self.date} ({self.shift})"

@@ -6,7 +6,7 @@ from Patients.serializers import PatientProfileSerializer
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = LabProfile
-        fields = ['id','user','home_sample_collection', 'name', 'address', 'phone']
+        fields = ['id','user','home_sample_collection', 'name', 'address','location', 'phone']
 
 
 class LabTypeSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class LabProfileSerializer(serializers.ModelSerializer):
     lab_types_details = LabTypeSerializer(source='lab_types', many=True, read_only=True)
     class Meta:
         model = LabProfile
-        fields = ['id', 'user', 'name', 'lab_types','lab_types_details','address', 'phone', 'home_sample_collection', 'created_at']
+        fields = ['id', 'user', 'name', 'lab_types','lab_types_details','address','location', 'phone', 'home_sample_collection', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
     def create(self, validated_data):
         lab_types = validated_data.pop('lab_types', [])

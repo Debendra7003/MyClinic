@@ -10,7 +10,7 @@ class AmbulanceSerializer(serializers.ModelSerializer):
         model = Ambulance
         fields = [
             'ambulance_id', 'user', 'service_name', 'vehicle_number',
-            'phone_number', 'whatsapp_number', 'service_area', 'active'
+            'phone_number', 'whatsapp_number', 'service_area', 'location', 'active'
         ]
 
     def get_user(self, obj):

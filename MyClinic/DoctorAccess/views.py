@@ -41,6 +41,7 @@ class DoctorProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 #------------------------------------------------- Doctor get-all or get by ID functionality----------------------------------------------------------------
     def get(self, request, doctor_id=None):
+        location = request.GET.get('location', None)
         if doctor_id:
             doctor_instance = get_object_or_404(User, user_id=doctor_id)
             try:
@@ -51,6 +52,12 @@ class DoctorProfileAPIView(APIView):
                 return Response({'error': 'Doctor profile not found.'}, status=status.HTTP_404_NOT_FOUND)
         else:
             profiles = DoctorRegistration.objects.all()
+            if location:
+                profiles = profiles.filter(
+                    Q(location__icontains=location) |
+                    Q(location__isnull=True) |
+                    Q(location__exact='')
+                )
             serializer = DoctorRegistrationSerializer(profiles, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
@@ -325,14 +332,37 @@ class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_bulk_create(self, serializer):
-        # Bulk create if many, else normal save
         if isinstance(serializer.validated_data, list):
             doctor_instance = self.request.user  # This is the User instance
-            DoctorAvailability.objects.bulk_create([
-                        DoctorAvailability(
+            to_create = []
+            duplicates = []
+            for item in serializer.validated_data:
+                date = item['date']
+                start_time = item['start_time']
+                end_time = item['end_time']
+                shift = item['shift']
+                exists = DoctorAvailability.objects.filter(
+                    doctor=doctor_instance,
+                    date=date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    shift=shift
+                ).exists()
+                if exists:
+                    duplicates.append(f"{date} {start_time}-{end_time} ({shift})")
+                else:
+                    to_create.append(
+                    DoctorAvailability(
                         doctor=doctor_instance,
                         **{k: v for k, v in item.items() if k != 'doctor'}
-                        ) for item in serializer.validated_data])
+                    )
+                )
+            if duplicates:
+                raise serializers.ValidationError(
+                {"error": f"Availability already exists for: {', '.join(duplicates)}"}
+            )
+            if to_create:
+                DoctorAvailability.objects.bulk_create(to_create)
         else:
             serializer.save(doctor=self.request.user)
 

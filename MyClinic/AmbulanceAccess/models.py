@@ -9,6 +9,7 @@ class Ambulance(models.Model):
     phone_number = models.CharField(max_length=15)
     whatsapp_number = models.CharField(max_length=15)
     service_area= models.CharField(max_length=200)
+    location = models.CharField(max_length=100, blank=True, null=True)
     active = models.BooleanField(default=True)
     register_at=models.DateTimeField(auto_now_add=True)
 

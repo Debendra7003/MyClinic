@@ -13,6 +13,7 @@ class LabProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='lab_profile')
     name = models.CharField(max_length=255)
     address = models.TextField()
+    location = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=20)
     home_sample_collection = models.BooleanField(default=False)
     lab_types = models.ManyToManyField('LabType', related_name='labs')

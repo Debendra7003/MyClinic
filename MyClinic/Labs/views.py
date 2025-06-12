@@ -79,6 +79,20 @@ class LabTypeViewSet(viewsets.ModelViewSet):
     serializer_class = LabTypeSerializer
     permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
     
+    def get_queryset(self):
+        queryset = LabType.objects.all()
+        location = self.request.query_params.get('location', None)
+        if location:
+            # Filter LabTypes that have at least one LabProfile with matching location or blank/null
+            queryset = queryset.filter(
+                labs__location__icontains=location
+            # ) | queryset.filter(
+            #     labs__location__isnull=True
+            # ) | queryset.filter(
+            #     labs__location__exact=''
+            )
+            queryset = queryset.distinct()
+        return queryset
     def perform_create(self, serializer):
         # lab_type = serializer.save()
         # if hasattr(self.request.user, 'lab_profile'):
