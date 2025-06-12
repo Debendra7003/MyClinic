@@ -308,18 +308,46 @@ class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
             return DoctorAvailability.objects.filter(doctor=self.request.user)
         return DoctorAvailability.objects.none()
     
-    def perform_create(self, serializer):
-        try:
-            if self.request.user.role != 'doctor':
-                raise ValidationError({
-                    "error": "Only doctors are allowed to create availability."
-                })
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        # Check if data is a list (bulk) or dict (single)
+        is_many = isinstance(data, list)
+        if is_many:
+            for item in data:
+                item['doctor'] = self.request.user.user_id  # Set doctor for each item
+            serializer = self.get_serializer(data=data, many=True)
+        else:
+            data['doctor'] = self.request.user.user_id
+            serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_bulk_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_bulk_create(self, serializer):
+        # Bulk create if many, else normal save
+        if isinstance(serializer.validated_data, list):
+            doctor_instance = self.request.user  # This is the User instance
+            DoctorAvailability.objects.bulk_create([
+                        DoctorAvailability(
+                        doctor=doctor_instance,
+                        **{k: v for k, v in item.items() if k != 'doctor'}
+                        ) for item in serializer.validated_data])
+        else:
             serializer.save(doctor=self.request.user)
 
-        except IntegrityError:
-            raise ValidationError({
-                "error": "This availability already exists for the selected date, shift and time."
-            })
+    # def perform_create(self, serializer):
+    #     try:
+    #         if self.request.user.role != 'doctor':
+    #             raise ValidationError({
+    #                 "error": "Only doctors are allowed to create availability."
+    #             })
+    #         serializer.save(doctor=self.request.user)
+
+    #     except IntegrityError:
+    #         raise ValidationError({
+    #             "error": "This availability already exists for the selected date, shift and time."
+    #         })
         
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
