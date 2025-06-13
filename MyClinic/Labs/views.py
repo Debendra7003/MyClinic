@@ -50,14 +50,32 @@ def schedule_lab_test_notifications(lab_test):
 class LabProfileViewSet(viewsets.ModelViewSet):
     queryset = LabProfile.objects.all()
     serializer_class = LabProfileSerializer
-    permission_classes = [IsLab] # Labs can modify, others can view
+    permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
     
+    def get_queryset(self):
+        user = self.request.user
+        if not hasattr(user, "role"):
+            return LabProfile.objects.none()
+
+        if user.role == 'lab':
+        # Lab user: only their own profile
+            return LabProfile.objects.filter(user=user)
+        elif getattr(user, 'is_admin', False):
+        # Admin: all profiles
+            return LabProfile.objects.all()
+        elif user.role == 'patient':
+        # Patient: all profiles (or return LabProfile.objects.none() to restrict)
+            return LabProfile.objects.all()
+        else:
+            return LabProfile.objects.none()
+
     def perform_create(self, serializer):
         if self.request.user.role != 'lab':
             raise serializers.ValidationError("Only labs can create a lab profile.")
         if LabProfile.objects.filter(user=self.request.user).exists():
             raise serializers.ValidationError("A LabProfile already exists for this lab.")
         serializer.save(user=self.request.user)
+    
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         print(instance.user)

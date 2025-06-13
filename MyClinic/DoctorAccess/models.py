@@ -18,7 +18,7 @@ class DoctorRegistration(models.Model):
     profile_image = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.doctor_name} ({self.user_id})"
+        return f"{self.doctor_name} ({self.doctor})"
     
 
 class DoctorAvailability(models.Model):
