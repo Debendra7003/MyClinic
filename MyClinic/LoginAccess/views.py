@@ -43,7 +43,8 @@ def send_sms_otp(customer):
         otp = customer.otp
         print("Mobile OTP:", otp)
         recipient_number = customer.mobile_number  # Fallback to current number if no temp update
-
+        if not recipient_number.startswith('+91'):
+            recipient_number = '+91' + recipient_number.lstrip('0')
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         message = client.messages.create(
             body=f"Hi {customer.first_name}, your OTP for SMS verification is: {otp}. Valid for 5 minutes.",
