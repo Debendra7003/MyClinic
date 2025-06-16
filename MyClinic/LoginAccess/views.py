@@ -15,6 +15,7 @@ from django.core.mail import send_mail
 from .models import User
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password
+import requests
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -38,7 +39,7 @@ def send_email_otp(customer):
         # Optional: You can log the error
         print(f"Email OTP sending failed: {str(e)}")
 
-def send_sms_otp(customer):
+def send_sms_otp_twilio(customer):
     try:
         otp = customer.otp
         print("Mobile OTP:", otp)
@@ -53,6 +54,31 @@ def send_sms_otp(customer):
         )
     except Exception as e:
         # Optional: You can log the error
+        print(f"SMS OTP sending failed: {str(e)}")
+
+
+def send_sms_otp(customer):
+    try:
+        otp = customer.otp
+        print("Mobile OTP:", otp)
+        recipient_number = customer.mobile_number
+        # Remove +91 if present, else keep as is (Fast2SMS expects 10 digit Indian numbers)
+        if recipient_number.startswith('+91'):
+            recipient_number = recipient_number[3:]
+
+        url = "https://www.fast2sms.com/dev/bulkV2"
+        payload = f"variables_values={otp}&route=otp&numbers={recipient_number}"
+        headers = {
+            'authorization': settings.FAST2SMS_API_KEY,
+            'Content-Type': "application/x-www-form-urlencoded",
+            'Cache-Control': "no-cache",
+        }
+
+        response = requests.post(url, data=payload, headers=headers)
+        print("Fast2SMS response:", response.text)
+        # Optionally, handle response status and errors here
+
+    except Exception as e:
         print(f"SMS OTP sending failed: {str(e)}")
 
 class EmailOTPVerifyView(APIView):

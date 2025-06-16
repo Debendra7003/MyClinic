@@ -95,6 +95,8 @@ class DoctorAppointmentSerializer(serializers.ModelSerializer):
         return obj.calculate_estimated_time()
     
 class DoctorAvailabilitySerializer(serializers.ModelSerializer):
+    start_time = serializers.TimeField(input_formats=['%I:%M %p', '%H:%M:%S', '%H:%M'])
+    end_time = serializers.TimeField(input_formats=['%I:%M %p', '%H:%M:%S', '%H:%M'])
     class Meta:
         model = DoctorAvailability
         fields = ['id', 'doctor', 'date','start_time','end_time','available', 'shift', 'created_at']
