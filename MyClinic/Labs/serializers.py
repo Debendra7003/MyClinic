@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LabTest, LabReport, LabProfile, LabType
+from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
 from Patients.serializers import PatientProfileSerializer
 
 
@@ -76,6 +76,13 @@ class LabTestSerializer(serializers.ModelSerializer):
         return ""
 
 
+class LabAvailabilitySerializer(serializers.ModelSerializer):
+    start_time = serializers.TimeField(input_formats=['%I:%M %p', '%H:%M:%S', '%H:%M'])
+    end_time = serializers.TimeField(input_formats=['%I:%M %p', '%H:%M:%S', '%H:%M'])
+    class Meta:
+        model = LabAvailability
+        fields = ['id', 'lab', 'date','start_time','end_time','available', 'created_at']
+        read_only_fields = ['id', 'created_at','lab']
 
 
 

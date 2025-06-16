@@ -76,3 +76,17 @@ class LabReport(models.Model):
 
     def __str__(self):
         return f"Report for {self.lab_test.test_type}"
+    
+class LabAvailability(models.Model):
+    lab = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lab_availabilities')
+    date = models.DateField(unique=True)
+    start_time = models.TimeField()
+    end_time = models.TimeField(blank=True, null=True)
+    available = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    # class Meta:
+    #     unique_together = ('lab', 'date', 'start_time', 'end_time')
+
+
+    def __str__(self):
+        return f"{self.lab} - {self.date} ({self.start_time} - {self.end_time})"

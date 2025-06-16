@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import LabTest, LabReport, LabProfile, LabType
-from .serializers import LabTestSerializer, LabReportSerializer, LabProfileSerializer, LabTypeSerializer
+from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
+from .serializers import LabTestSerializer, LabReportSerializer, LabProfileSerializer, LabTypeSerializer, LabAvailabilitySerializer
 from Patients.models import PatientProfile
 from rest_framework import serializers
 from rest_framework.permissions import BasePermission
-from MyClinic.permissions import IsLab, IsPatient, IsReadOnly
+from MyClinic.permissions import IsLab, IsPatient, IsReadOnly, IsAdmin
 from datetime import datetime, timedelta
 from MyClinic.utils import send_scheduled_push_notification
 from rest_framework.response import Response
@@ -16,6 +16,7 @@ from django_filters import rest_framework as filters
 from django.db import models
 from DoctorAccess.models import DoctorRegistration
 from LoginAccess.models import User
+from rest_framework import status
 
 def schedule_lab_test_notifications(lab_test):
     patient = lab_test.patient
@@ -195,6 +196,112 @@ class LabTestViewSet(viewsets.ModelViewSet):
             schedule_lab_test_notifications(updated_instance)
 
         return Response(serializer.data)
+
+
+
+
+class LabAvailabilityViewSet(viewsets.ModelViewSet):
+    queryset = LabAvailability.objects.all()
+    serializer_class = LabAvailabilitySerializer
+    permission_classes = [IsLab | IsPatient | IsAdmin]
+
+    def get_queryset(self):
+        if self.request.user.role == 'patient' or self.request.user.is_admin:
+            return LabAvailability.objects.all()
+        elif self.request.user.role == 'lab':
+            return LabAvailability.objects.filter(lab=self.request.user)
+        return LabAvailability.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        # Check if data is a list (bulk) or dict (single)
+        is_many = isinstance(data, list)
+        if is_many:
+            for item in data:
+                item['lab'] = self.request.user.user_id  # Set lab for each item
+            serializer = self.get_serializer(data=data, many=True)
+        else:
+            data['lab'] = self.request.user.user_id
+            serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_bulk_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_bulk_create(self, serializer):
+        if isinstance(serializer.validated_data, list):
+            lab_instance = self.request.user  # This is the User instance
+            to_create = []
+            duplicates = []
+            for item in serializer.validated_data:
+                date = item['date']
+                start_time = item['start_time']
+                end_time = item['end_time']
+                exists = LabAvailability.objects.filter(
+                    lab=lab_instance,
+                    date=date,
+                    # start_time=start_time,
+                    # end_time=end_time,
+                ).exists()
+                if exists:
+                    duplicates.append(f"{date} {start_time}-{end_time}")
+                else:
+                    to_create.append(
+                    LabAvailability(
+                        lab=lab_instance,
+                        **{k: v for k, v in item.items() if k != 'lab'}
+                    )
+                )
+            if duplicates:
+                print(f"Duplicates found: {duplicates}")
+                raise serializers.ValidationError(
+                {"error": f"Availability already exists for: {', '.join(duplicates)}"}
+            )
+            if to_create:
+                LabAvailability.objects.bulk_create(to_create)
+        else:
+            serializer.save(lab=self.request.user)
+
+    # def perform_create(self, serializer):
+    #     try:
+    #         if self.request.user.role != 'doctor':
+    #             raise ValidationError({
+    #                 "error": "Only doctors are allowed to create availability."
+    #             })
+    #         serializer.save(doctor=self.request.user)
+
+    #     except IntegrityError:
+    #         raise ValidationError({
+    #             "error": "This availability already exists for the selected date, shift and time."
+    #         })
+        
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+
+        if user.role == 'doctor':
+            raise serializers.ValidationError("You are not authorized to update.")
+        elif user.role == 'patient':
+            raise serializers.ValidationError("You are not authorized to update.")
+
+        # Perform the update
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+        return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+
+        if user.role != 'lab':
+            raise serializers.ValidationError("You are not authorized to delete this availability.")
+
+        self.perform_destroy(instance)
+        return Response({"message": "Availability deleted successfully."}, status=status.HTTP_200_OK)
+
+
 
 
 class LabReportViewSet(viewsets.ModelViewSet):
