@@ -79,13 +79,15 @@ class LabReport(models.Model):
     
 class LabAvailability(models.Model):
     lab = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lab_availabilities')
-    date = models.DateField(unique=True)
+    date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField(blank=True, null=True)
     available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # class Meta:
     #     unique_together = ('lab', 'date', 'start_time', 'end_time')
+    class Meta:
+        unique_together = ('lab', 'date')
 
 
     def __str__(self):
