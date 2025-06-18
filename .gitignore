@@ -7,3 +7,5 @@ __pycache__/
 gen_dummy_id_token.py
 dummy_id_token.txt
 get_id_token.py
+mysql_data/
+celerybeat-schedule
