@@ -143,7 +143,7 @@ class LabTypeViewSet(viewsets.ModelViewSet):
 class LabTestViewSet(viewsets.ModelViewSet):
     queryset = LabTest.objects.all()
     serializer_class = LabTestSerializer
-    permission_classes = [IsPatient | IsLab] # Patients can book, labs can view/manage
+    permission_classes = [IsPatient | IsLab | IsAdmin] # Patients can book, labs can view/manage
 
     # filter_backends = [DjangoFilterBackend, SearchFilter]
     # filterset_fields = ['lab_profile__name', 'test_type']
@@ -161,6 +161,10 @@ class LabTestViewSet(viewsets.ModelViewSet):
             # return LabTest.objects.filter(patient__user__role="patient")
         elif user.role == 'patient':
             return LabTest.objects.filter(patient__user=user)
+        
+        elif user.is_admin:
+            return LabTest.objects.all()
+        
         return LabTest.objects.none()
     
     def perform_create(self, serializer):
