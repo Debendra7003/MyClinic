@@ -244,8 +244,8 @@ class LabAvailabilityViewSet(viewsets.ModelViewSet):
                 exists = LabAvailability.objects.filter(
                     lab=lab_instance,
                     date=date,
-                    # start_time=start_time,
-                    # end_time=end_time,
+                    start_time=start_time,
+                    end_time=end_time,
                 ).exists()
                 if exists:
                     duplicates.append(f"{date} {start_time}-{end_time}")

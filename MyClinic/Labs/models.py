@@ -84,10 +84,10 @@ class LabAvailability(models.Model):
     end_time = models.TimeField(blank=True, null=True)
     available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    # class Meta:
-    #     unique_together = ('lab', 'date', 'start_time', 'end_time')
     class Meta:
-        unique_together = ('lab', 'date')
+        unique_together = ('lab', 'date', 'start_time', 'end_time')
+    # class Meta:
+    #     unique_together = ('lab', 'date')
 
 
     def __str__(self):
