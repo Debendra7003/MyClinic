@@ -58,10 +58,12 @@ class LabTestSerializer(serializers.ModelSerializer):
     reports = LabReportSerializer(many=True, read_only=True)
     lab_profile = serializers.PrimaryKeyRelatedField(queryset=LabProfile.objects.all())
     patient_name = serializers.SerializerMethodField()  
+    lab_profile_name = serializers.SerializerMethodField()
+    lab_profile_code = serializers.SerializerMethodField()
 
     class Meta:
         model = LabTest
-        fields = ['id', 'patient','patient_name', 'lab_profile', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
+        fields = ['id', 'patient','patient_name', 'lab_profile','lab_profile_code', 'lab_profile_name', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
     def validate(self, data):
         request = self.context['request']
@@ -74,6 +76,14 @@ class LabTestSerializer(serializers.ModelSerializer):
         if user:
             return f"{user.first_name} {user.last_name}".strip()
         return ""
+    def get_lab_profile_name(self, obj):
+        if obj.lab_profile:
+            return obj.lab_profile.name
+        return ""
+    def get_lab_profile_code(self,obj):
+        if obj.lab_profile:
+            return obj.lab_profile.user.user_id
+        return ""
 
 
 class LabAvailabilitySerializer(serializers.ModelSerializer):
@@ -83,7 +93,6 @@ class LabAvailabilitySerializer(serializers.ModelSerializer):
         model = LabAvailability
         fields = ['id', 'lab', 'date','start_time','end_time','available', 'created_at']
         read_only_fields = ['id', 'created_at','lab']
-
 
 
 
