@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Policy - EzyDoc</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+      color: #2c3e50;
+      /* background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); */
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid black;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(100, 149, 237, 0.15);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+      color: white;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      position: relative;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px 20px 0 0;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .effective-date {
+      font-size: 1rem;
+      opacity: 0.95;
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+      color: #e8f0fe;
+    }
+
+    .content {
+      padding: 3rem 2.5rem;
+    }
+
+    .intro {
+      font-size: 1.1rem;
+      color: #5a6c7d;
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      background: #f8faff;
+      border-radius: 16px;
+      border-left: 4px solid #6495ED;
+      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.08);
+      line-height: 1.7;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 2.5rem 0 1.5rem 0;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
+      position: relative;
+    }
+
+    p {
+      color: #5a6c7d;
+      margin-bottom: 1.25rem;
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    ul {
+      margin: 1.5rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    li {
+      color: #5a6c7d;
+      margin-bottom: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e8f0fe;
+      box-shadow: 0 2px 8px rgba(100, 149, 237, 0.06);
+      position: relative;
+      transition: all 0.3s ease;
+      line-height: 1.7;
+    }
+
+    li:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(100, 149, 237, 0.12);
+      border-color: #6495ED;
+    }
+
+    li::before {
+      content: '✓';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(100, 149, 237, 0.3);
+    }
+
+    strong {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    a {
+      color: #6495ED;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    a:hover {
+      color: #4169E1;
+      text-decoration: underline;
+    }
+
+    .contact-section {
+      margin: 2.5rem 0;
+      padding: 2rem;
+      background: linear-gradient(135deg, #f8faff 0%, #e8f0fe 100%);
+      border-radius: 16px;
+      border: 1px solid #e8f0fe;
+      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.08);
+    }
+
+    .contact-info {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(100, 149, 237, 0.06);
+    }
+
+    .email-link {
+      display: inline-flex;
+      align-items: center;
+      font-size: 1.1rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+      color: white;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(100, 149, 237, 0.3);
+    }
+
+    .email-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(100, 149, 237, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    .email-link::before {
+      content: '✉';
+      margin-right: 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    .footer {
+      background: #f8faff;
+      padding: 2rem;
+      text-align: center;
+      color: #5a6c7d;
+      font-size: 0.9rem;
+      border-radius: 0 0 20px 20px;
+      border-top: 1px solid #e8f0fe;
+    }
+
+    /* Security badge */
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 1rem;
+      box-shadow: 0 3px 10px rgba(40, 167, 69, 0.2);
+    }
+
+    .security-badge::before {
+      content: '🔒';
+      margin-right: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+
+      .container {
+        border-radius: 16px;
+      }
+
+      .header {
+        padding: 2.5rem 2rem;
+        border-radius: 16px 16px 0 0;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .content {
+        padding: 2rem 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        padding: 0.75rem 1.25rem;
+      }
+
+      li {
+        padding: 1rem 1.25rem;
+      }
+
+      .footer {
+        border-radius: 0 0 16px 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 2rem 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .content {
+        padding: 1.5rem 1.25rem;
+      }
+
+      .intro {
+        padding: 1.5rem;
+      }
+
+      .contact-section {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Privacy Policy</h1>
+      <p class="effective-date">Effective Date: June 26, 2025</p>
+    </div>
+
+    <div class="content">
+      <p class="intro">
+        EzyDoc ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect,
+        use, disclose, and safeguard your information when you use our mobile application and services.
+      </p>
+
+      <h2>1. Information We Collect</h2>
+      <ul>
+        <li><strong>Personal Information:</strong> Name, email address, phone number.</li>
+        <li><strong>Health Information:</strong> Uploaded prescriptions, lab reports.</li>
+        <li><strong>Appointment Data:</strong> Doctor/lab selection, appointment times.</li>
+        <li><strong>Usage Data:</strong> Analytics for app usage and improvements.</li>
+      </ul>
+
+      <h2>2. How We Use Your Information</h2>
+      <p>We use your data to:</p>
+      <ul>
+        <li>Manage user registration and appointments.</li>
+        <li>Allow healthcare professionals to access relevant health records.</li>
+        <li>Improve and personalize your app experience.</li>
+        <li>Provide analytics for administrative use (non-identifiable).</li>
+      </ul>
+
+      <h2>3. Data Sharing</h2>
+      <p>We do <strong>not</strong> sell your personal data. We only share data with:</p>
+      <ul>
+        <li>Doctors and labs directly involved in your care.</li>
+        <li>Government authorities when legally required.</li>
+      </ul>
+
+      <h2>4. Data Security</h2>
+      <p>
+        We use secure our infrastructure hosted on a VPS well protected by firewalls, SSL encryption, and access-controlled
+        MySQL databases to protect your data.
+      </p>
+      <!-- <div class="security-badge">SSL Encrypted & HIPAA Compliant</div> -->
+
+      <h2>5. Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>Access or update your personal information.</li>
+        <li>Request deletion of your data or account.</li>
+        <li>Contact us with any concerns regarding your privacy.</li>
+      </ul>
+
+      <h2>6. Contact Us</h2>
+      <div class="contact-section">
+        <p>If you have any questions or concerns about this Privacy Policy, contact us at:</p>
+        <!-- <div class="contact-info"> -->
+          <a href="mailto:intulet.dev@gmail.com" class="email-link">intulet.dev@gmail.com</a>
+        <!-- </div> -->
+      </div>
+    </div>
+
+    <div class="footer">
+      © 2025 EzyDoc. All rights reserved.
+    </div>
+  </div>
+
+</body>
+</html>

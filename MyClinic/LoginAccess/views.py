@@ -17,6 +17,9 @@ from django.utils import timezone
 from django.contrib.auth.hashers import check_password
 import requests
 
+def privacy_policy(request):
+    return render(request, "privacy-policy.html")
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {'refresh': str(refresh), 'access': str(refresh.access_token)}

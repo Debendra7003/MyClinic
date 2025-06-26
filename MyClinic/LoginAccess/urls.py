@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserRegisterView, UserLoginView, GoogleSignInView, FirebaseTokenView, EmailOTPVerifyView, SMSOTPVerifyView, PasswordResetRequestOTPView, PasswordResetVerifyOTPView, PasswordResetConfirmOTPView
+from .views import UserRegisterView, UserLoginView, GoogleSignInView, FirebaseTokenView, EmailOTPVerifyView, SMSOTPVerifyView, PasswordResetRequestOTPView, PasswordResetVerifyOTPView, PasswordResetConfirmOTPView, privacy_policy
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -13,6 +13,8 @@ urlpatterns = [
     path('password-reset/request-otp/', PasswordResetRequestOTPView.as_view(), name='password_reset_request_otp'),
     path('password-reset/verify-otp/', PasswordResetVerifyOTPView.as_view(), name='password_reset_verify_otp'),
     path('password-reset/confirm-otp/', PasswordResetConfirmOTPView.as_view(), name='password_reset_confirm_otp'),
+    path('privacy-policy/', privacy_policy, name='privacy_policy'),
+
     
 
 
