@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script async src="https://tally.so/widgets/embed.js"></script>
   <title>Privacy Policy - EzyDoc</title>
   <style>
     * {
@@ -237,6 +238,27 @@
       content: '🔒';
       margin-right: 0.5rem;
     }
+.delete-button {
+  padding: 0.5rem 0.75rem;
+  /* background: linear-gradient(135deg, #ff4e50 0%, #f9d423 100%); */
+  background: transparent;
+  border: 1px solid black;
+  border-radius: 10px;
+  /* color: white; */
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(117, 117, 117);
+  transition: all 0.3s ease;
+}
+
+.delete-button:hover {
+  transform: translateY(-2px);
+  background: rgb(232, 104, 104);
+  color: white;
+  /* border-width: 2px; */
+  /* box-shadow: 0 6px 18px rgba(255, 78, 80, 0.5); */
+}
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -299,8 +321,13 @@
   </style>
 </head>
 <body>
-
+   <div style="margin-bottom:3rem;">
+  <button data-tally-open="woZlRM" data-tally-overlay="1" class="delete-button" style="font-weight: 200; font-size: small;">
+    Request Account Deletion
+  </button>
+</div>
   <div class="container">
+ 
     <div class="header">
       <h1>Privacy Policy</h1>
       <p class="effective-date">Effective Date: June 26, 2025</p>
@@ -350,6 +377,11 @@
         <li>Request deletion of your data or account.</li>
         <li>Contact us with any concerns regarding your privacy.</li>
       </ul>
+<div style="text-align: center; margin: 3rem 0;">
+  <button data-tally-open="woZlRM" data-tally-overlay="1" class="delete-button">
+    Request Account Deletion
+  </button>
+</div>
 
       <h2>6. Contact Us</h2>
       <div class="contact-section">
