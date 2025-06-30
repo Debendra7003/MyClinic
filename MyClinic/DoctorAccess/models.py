@@ -6,7 +6,7 @@ from django.utils import timezone
 import pytz
 # Create your models here.
 class DoctorRegistration(models.Model):
-    doctor = models.ForeignKey(User,on_delete= models.CASCADE, related_name='Doctor_id')
+    doctor = models.OneToOneField(User,on_delete= models.CASCADE, related_name='Doctor_id')
     doctor_name = models.CharField(max_length=100)
     specialist = models.CharField(max_length=100)
     license_number = models.CharField(max_length=100, unique= True)
