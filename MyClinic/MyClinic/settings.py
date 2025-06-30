@@ -37,7 +37,7 @@ firebase_admin.initialize_app(cred)
 SECRET_KEY = 'django-insecure-m-d!fh9-&34idi2hmbg+vaj%6!e!a(twd5-otc%j2v986=o%9('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = not (os.getenv('PRODUCTION', '0').lower() in ['1', 'true'])
 
 ALLOWED_HOSTS = ['*']
 
@@ -98,20 +98,39 @@ WSGI_APPLICATION = 'MyClinic.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': os.getenv('MYSQL_DATABASE'),
-    #     'USER': os.getenv('MYSQL_USER'),
-    #     'PASSWORD': os.getenv('MYSQL_PASSWORD'),
-    #     'HOST': os.getenv('MYSQL_HOST','db'),
-    #     'PORT': os.getenv('MYSQL_PORT', '3306')
-    # }
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# DATABASES = {
+#     # 'default': {
+#     #     'ENGINE': 'django.db.backends.mysql',
+#     #     'NAME': os.getenv('MYSQL_DATABASE'),
+#     #     'USER': os.getenv('MYSQL_USER'),
+#     #     'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+#     #     'HOST': os.getenv('MYSQL_HOST','db'),
+#     #     'PORT': os.getenv('MYSQL_PORT', '3306')
+#     # }
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+if os.getenv('PRODUCTION', '0').lower() in ['1', 'true']:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('MYSQL_DATABASE'),
+            'USER': os.getenv('MYSQL_USER'),
+            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'HOST': os.getenv('MYSQL_HOST', 'db'),
+            'PORT': os.getenv('MYSQL_PORT', '3306'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
