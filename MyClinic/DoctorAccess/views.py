@@ -118,7 +118,7 @@ class DoctorAppointmentView(APIView):
                         args=[
                             patient.firebase_registration_token,
                             "Appointment Reminder",
-                            "Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
+                            f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
                             None
                         ],
                         eta=scheduled_time
