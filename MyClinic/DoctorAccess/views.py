@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from MyClinic.utils import send_push_notification, send_scheduled_push_notification
 from .tasks import send_appointment_reminder
+from django.utils import timezone
 
 #------------------------------------------------- Doctor Register functionality-----------------------------------------------------------
 class DoctorRegistrationView(APIView):
@@ -113,7 +114,11 @@ class DoctorAppointmentView(APIView):
                 # Schedule a notification for the patient a day before the appointment
                 patient = appointment.patient_id
                 if patient.firebase_registration_token:
-                    scheduled_time = datetime.combine(appointment.date_of_visit, appointment.visit_time) - timedelta(days=1)
+                    local_dt = timezone.make_aware(
+                                datetime.combine(appointment.date_of_visit, appointment.visit_time),
+                                timezone.get_current_timezone()
+                                                              )
+                    scheduled_time = local_dt - timedelta(days=1)
                     send_appointment_reminder.apply_async(
                         args=[
                             patient.firebase_registration_token,
@@ -121,7 +126,7 @@ class DoctorAppointmentView(APIView):
                             f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
                             None
                         ],
-                        eta=scheduled_time
+                        eta=scheduled_time.astimezone(timezone.utc)
                     )
                     # send_scheduled_push_notification(
                     #     registration_token=patient.firebase_registration_token,
