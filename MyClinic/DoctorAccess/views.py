@@ -18,6 +18,7 @@ from rest_framework import serializers
 from MyClinic.utils import send_push_notification, send_scheduled_push_notification
 from .tasks import send_appointment_reminder
 from django.utils import timezone
+from datetime import timezone as dt_timezone
 
 #------------------------------------------------- Doctor Register functionality-----------------------------------------------------------
 class DoctorRegistrationView(APIView):
@@ -126,7 +127,7 @@ class DoctorAppointmentView(APIView):
                             f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
                             None
                         ],
-                        eta=scheduled_time.astimezone(timezone.utc)
+                        eta=scheduled_time.astimezone(dt_timezone.utc)
                     )
                     # send_scheduled_push_notification(
                     #     registration_token=patient.firebase_registration_token,
