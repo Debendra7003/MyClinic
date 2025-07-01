@@ -267,8 +267,10 @@ FAST2SMS_API_KEY = os.getenv('FAST2SMS_API_KEY', '')
 # FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Or your Redis server URL
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Or your Redis server URL
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
