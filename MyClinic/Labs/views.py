@@ -51,8 +51,8 @@ def schedule_lab_test_notifications(lab_test):
 class LabProfileViewSet(viewsets.ModelViewSet):
     queryset = LabProfile.objects.all()
     serializer_class = LabProfileSerializer
-    permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
-    
+    permission_classes = [IsLab | IsAdmin | IsReadOnly] # Labs can modify, others can view
+
     def get_queryset(self):
         user = self.request.user
         if not hasattr(user, "role"):
@@ -70,27 +70,51 @@ class LabProfileViewSet(viewsets.ModelViewSet):
         else:
             return LabProfile.objects.none()
 
+    # def perform_create(self, serializer):
+    #     user = self.request.user
+    #     if self.request.user.role != 'lab':
+    #         raise serializers.ValidationError("Only labs can create a lab profile.")
+    #     if LabProfile.objects.filter(user=self.request.user).exists():
+    #         raise serializers.ValidationError("A LabProfile already exists for this lab.")
+    #     serializer.save(user=self.request.user)
+
     def perform_create(self, serializer):
-        if self.request.user.role != 'lab':
-            raise serializers.ValidationError("Only labs can create a lab profile.")
-        if LabProfile.objects.filter(user=self.request.user).exists():
-            raise serializers.ValidationError("A LabProfile already exists for this lab.")
-        serializer.save(user=self.request.user)
+        user = self.request.user
+    # If admin, allow specifying the lab user via 'user' field in request data
+        if getattr(user, 'is_admin', False):
+            lab_user_id = self.request.data.get('user')
+            if not lab_user_id:
+                raise serializers.ValidationError("Admin must provide 'user' (lab user_id) to create a lab profile.")
+            try:
+                lab_user = User.objects.get(user_id=lab_user_id, role='lab')
+            except User.DoesNotExist:
+                raise serializers.ValidationError("No lab user found with the provided user_id.")
+            if LabProfile.objects.filter(user=lab_user).exists():
+                raise serializers.ValidationError("A LabProfile already exists for this lab user.")
+            serializer.save(user=lab_user)
+    # If lab, only allow creating their own profile
+        elif user.role == 'lab':
+            if LabProfile.objects.filter(user=user).exists():
+                raise serializers.ValidationError("A LabProfile already exists for this lab.")
+            serializer.save(user=user)
+        else:
+            raise serializers.ValidationError("Only labs or admin can create a lab profile.")
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        print(instance.user)
-        if instance.user != request.user:
+        user = request.user
+        # Allow admin or the owner lab to update
+        if not (getattr(user, 'is_admin', False) or instance.user == user):
             raise serializers.ValidationError("You are not authorized to update this lab profile.")
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        print(instance)
-        if instance.user != request.user:
+        user = request.user
+        # Allow admin or the owner lab to delete
+        if not (getattr(user, 'is_admin', False) or instance.user == user):
             raise serializers.ValidationError("You are not authorized to delete this lab profile.")
         return super().destroy(request, *args, **kwargs)
-    
 
 
 class LabTypeViewSet(viewsets.ModelViewSet):
