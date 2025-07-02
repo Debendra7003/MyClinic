@@ -3,7 +3,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, UserLogin, GoogleSignInSerializer, FirebaseTokenSerializer, EmailOTPVerifySerializer
+from .serializers import ( UserSerializer, UserLogin, GoogleSignInSerializer, FirebaseTokenSerializer,
+                           EmailOTPVerifySerializer, UserRoleCreateSerializer )
 from django.contrib.auth import authenticate
 # from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -15,6 +16,8 @@ from django.core.mail import send_mail
 from .models import User
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password
+from MyClinic.permissions import IsAdmin
+from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView, ListAPIView
 import requests
 
 def privacy_policy(request):
@@ -91,7 +94,8 @@ class EmailOTPVerifyView(APIView):
             serializer = EmailOTPVerifySerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.validated_data['user']
-                user.is_active = True
+                if user.role == 'patient':
+                    user.is_active = True
                 user.email_otp = None  # Clear OTP after verification
                 user.save()
                 return Response({"message": "Email verified successfully"}, status=status.HTTP_200_OK)
@@ -112,7 +116,8 @@ class SMSOTPVerifyView(APIView):
             if customer.verification_expiry < timezone.now():
                 return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
             if customer.otp == sms_otp:
-                customer.is_active = True
+                if customer.role == 'patient':
+                    customer.is_active = True
                 customer.otp = None
                 customer.save()
                 return Response({
@@ -171,6 +176,9 @@ class UserLoginView(APIView):
             print("Views: ",user)
             if user is not None:
                 if not user.is_active:
+                    if user.role in ['lab', 'doctor', 'ambulance']:
+                        return Response({'Errors': {'non_field_errors': ['Your account is not active.']}}, status=status.HTTP_403_FORBIDDEN)
+
                     return Response({'Errors': {'non_field_errors': ['Your account is not active. Please verify your email or mobile number.']}}, status=status.HTTP_403_FORBIDDEN)
                 response_data = {
                     'user_id': user.user_id,
@@ -359,9 +367,38 @@ class ChangePasswordView(APIView):
         user.save()
         return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
 
+# Add user with role (doctor/lab/ambulance)
+class AdminAddUserView(CreateAPIView):
+    serializer_class = UserRoleCreateSerializer
+    permission_classes = [IsAdmin]
+
+# Activate/Deactivate user
+class AdminToggleActiveView(UpdateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [IsAdmin]
+    serializer_class = UserRoleCreateSerializer
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = not user.is_active
+        user.save()
+        return Response({'message': f'User {user.role} {"activated" if user.is_active else "deactivated"}.'})
+
+# Delete user
+class AdminDeleteUserView(DestroyAPIView):
+    queryset = User.objects.all()
+    permission_classes = [IsAdmin]
 
 
+class AdminListUsersByRoleView(ListAPIView):
+    serializer_class = UserRoleCreateSerializer
+    permission_classes = [IsAdmin]
 
+    def get_queryset(self):
+        role = self.request.query_params.get('role')
+        if role in ['doctor', 'lab', 'ambulance']:
+            return User.objects.filter(role=role)
+        return User.objects.none()
 
 # class GoogleSignInView(APIView):
 #     permission_classes = [AllowAny]

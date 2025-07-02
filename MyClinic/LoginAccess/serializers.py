@@ -118,6 +118,16 @@ class EmailOTPVerifySerializer(serializers.Serializer):
         return data
   
 
+class UserRoleCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['user_id', 'first_name', 'last_name', 'email', 'mobile_number', 'role', 'password', 'is_active']
+        read_only_fields = ['user_id', 'is_active']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 
 
