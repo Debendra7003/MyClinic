@@ -120,7 +120,7 @@ class LabProfileViewSet(viewsets.ModelViewSet):
 class LabTypeViewSet(viewsets.ModelViewSet):
     queryset = LabType.objects.all()
     serializer_class = LabTypeSerializer
-    permission_classes = [IsLab | IsReadOnly] # Labs can modify, others can view
+    permission_classes = [IsLab| IsAdmin | IsReadOnly] # Labs can modify, others can view
     
     def get_queryset(self):
         queryset = LabType.objects.all()
