@@ -120,7 +120,8 @@ class DoctorAppointmentView(APIView):
                                 timezone.get_current_timezone()
                                                               )
                     scheduled_time = local_dt - timedelta(days=1)
-                    send_appointment_reminder.apply_async(
+                    try:
+                        send_appointment_reminder.apply_async(
                         args=[
                             patient.firebase_registration_token,
                             "Appointment Reminder",
@@ -128,7 +129,12 @@ class DoctorAppointmentView(APIView):
                             None
                         ],
                         eta=scheduled_time.astimezone(dt_timezone.utc)
-                    )
+                        )
+                    except Exception as e:
+                        print(f"Error scheduling push notification: {e}")
+                        # return Response({
+                        #     "message": "Appointment booked successfully, but failed to schedule reminder notification.",
+                        # }, status=status.HTTP_201_CREATED)
                     # send_scheduled_push_notification(
                     #     registration_token=patient.firebase_registration_token,
                     #     title="Appointment Reminder",
