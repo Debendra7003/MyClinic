@@ -121,15 +121,16 @@ class DoctorAppointmentView(APIView):
                                                               )
                     scheduled_time = local_dt - timedelta(days=1)
                     try:
-                        send_appointment_reminder.apply_async(
-                        args=[
+                        if scheduled_time > timezone.now():
+                            send_appointment_reminder.apply_async(
+                            args=[
                             patient.firebase_registration_token,
                             "Appointment Reminder",
                             f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
                             None
-                        ],
-                        eta=scheduled_time.astimezone(dt_timezone.utc)
-                        )
+                            ],
+                            eta=scheduled_time.astimezone(dt_timezone.utc)
+                            )
                     except Exception as e:
                         print(f"Error scheduling push notification: {e}")
                         # return Response({
