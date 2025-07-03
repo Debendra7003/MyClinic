@@ -2,7 +2,8 @@ from django.urls import path
 from .views import ( UserRegisterView, UserLoginView, GoogleSignInView, FirebaseTokenView, 
                     EmailOTPVerifyView, SMSOTPVerifyView, PasswordResetRequestOTPView, 
                     PasswordResetVerifyOTPView, PasswordResetConfirmOTPView, privacy_policy,
-                     AdminAddUserView, AdminToggleActiveView, AdminDeleteUserView, AdminListUsersByRoleView )
+                     AdminAddUserView, AdminToggleActiveView, AdminDeleteUserView, AdminListUsersByRoleView,
+                      FirebaseTokenRemoveView)
 
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('admin/user/<str:pk>/toggle-active/', AdminToggleActiveView.as_view(), name='admin_toggle_active'),
     path('admin/user/<str:pk>/delete/', AdminDeleteUserView.as_view(), name='admin_delete_user'),
     path('admin/list-users/', AdminListUsersByRoleView.as_view(), name='admin_list_users_by_role'),
+    path('firebase-token/remove/', FirebaseTokenRemoveView.as_view(), name='firebase-token-remove'),
     path('privacy-policy/', privacy_policy, name='privacy_policy'),
 
     

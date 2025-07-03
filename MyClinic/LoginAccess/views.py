@@ -404,6 +404,18 @@ class AdminListUsersByRoleView(ListAPIView):
             return User.objects.filter(role=role)
         return User.objects.none()
 
+
+class FirebaseTokenRemoveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.firebase_registration_token = None
+        user.save()
+        return Response({'message': 'Firebase registration token removed successfully.'}, status=status.HTTP_200_OK)
+
+
+
 # class GoogleSignInView(APIView):
 #     permission_classes = [AllowAny]
 
