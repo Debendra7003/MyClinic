@@ -258,7 +258,7 @@ class PasswordResetRequestOTPView(APIView):
             customer = None
             if email:
                 customer = User.objects.get(email=email)
-                if not customer.is_active:
+                if not customer.is_active and customer.role != 'patient':
                     return Response({"error": "Email is not verified. Please verify your email first."}, 
                                   status=status.HTTP_403_FORBIDDEN)
                 customer.set_email_otp()
@@ -267,7 +267,7 @@ class PasswordResetRequestOTPView(APIView):
                               status=status.HTTP_200_OK)
             elif mobile_number:
                 customer = User.objects.get(mobile_number=mobile_number)
-                if not customer.is_active:
+                if not customer.is_active and customer.role != 'patient':
                     return Response({"error": "Mobile number is not verified. Please verify your mobile number first."}, 
                                   status=status.HTTP_403_FORBIDDEN)
                 customer.set_sms_otp()
@@ -298,6 +298,8 @@ class PasswordResetVerifyOTPView(APIView):
                     return Response({"error": "Invalid or expired OTP"}, 
                                   status=status.HTTP_400_BAD_REQUEST)
                 customer.email_otp = None
+                if customer.role == 'patient':
+                    customer.is_active = True
                 customer.can_reset_password = True
             else:  # Assuming it's a mobile number
                 customer = User.objects.get(mobile_number=mobile_number)
@@ -311,6 +313,8 @@ class PasswordResetVerifyOTPView(APIView):
                     return Response({"error": "Invalid or expired OTP"}, 
                                   status=status.HTTP_400_BAD_REQUEST)
                 customer.otp = None
+                if customer.role == 'patient':
+                    customer.is_active = True
                 customer.can_reset_password = True
             
             customer.save()
