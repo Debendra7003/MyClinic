@@ -106,10 +106,13 @@ class DoctorAppointmentView(APIView):
                 # Push Notification to doctor when an appointment is booked
                 doctor = appointment.doctor_id
                 if doctor.firebase_registration_token:
+                    visit_time_str = appointment.visit_time.strftime("%I:%M %p")  # 09:00 AM
+                    date_of_visit_str = appointment.date_of_visit.strftime("%d %b %Y")  # 04 Jul 2025
                     send_push_notification(
                         registration_token=doctor.firebase_registration_token,
                         title="New Appointment Booked",
-                        body=f"An appointment has been booked by {appointment.patient_name} on {appointment.date_of_visit} at {appointment.visit_time}.",
+                        # body=f"An appointment has been booked by {appointment.patient_name} on {appointment.date_of_visit} at {appointment.visit_time}.",
+                        body=f"An appointment has been booked by {appointment.patient_name} on {date_of_visit_str} at {visit_time_str}.",
                     )
 
                 # Schedule a notification for the patient a day before the appointment
@@ -122,11 +125,14 @@ class DoctorAppointmentView(APIView):
                     scheduled_time = local_dt - timedelta(days=1)
                     try:
                         if scheduled_time > timezone.now():
+                            visit_time_str = appointment.visit_time.strftime("%I:%M %p")
+                            date_of_visit_str = appointment.date_of_visit.strftime("%d %b %Y")
+
                             send_appointment_reminder.apply_async(
                             args=[
                             patient.firebase_registration_token,
                             "Appointment Reminder",
-                            f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {appointment.visit_time}.",
+                            f"Your appointment with Dr. {appointment.doctor_name} is scheduled tomorrow at {visit_time_str}.",
                             None
                             ],
                             eta=scheduled_time.astimezone(dt_timezone.utc)
