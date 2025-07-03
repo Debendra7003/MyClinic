@@ -61,6 +61,8 @@ class AppointmentCancelledSerializer(serializers.ModelSerializer):
 
 class DoctorAppointmentSerializer(serializers.ModelSerializer):
     estimated_time = serializers.SerializerMethodField()
+    visit_time = serializers.TimeField(input_formats=['%I:%M %p', '%H:%M:%S', '%H:%M'])
+
 
     class Meta:
         model = DoctorAppointment
