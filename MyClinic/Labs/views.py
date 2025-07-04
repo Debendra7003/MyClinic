@@ -17,7 +17,9 @@ from django.db import models
 from DoctorAccess.models import DoctorRegistration
 from LoginAccess.models import User
 from rest_framework import status
-
+import os
+from django.http import Http404, FileResponse
+from django.conf import settings
 def schedule_lab_test_notifications(lab_test):
     patient = lab_test.patient
     registration_token = patient.user.firebase_registration_token
@@ -452,3 +454,13 @@ class CentralSearchView(APIView):
             "lab_types": LabTypeSerializer(lab_types, many=True).data,
             "doctor_users": UserSerializer(doctor_users, many=True).data,
         })
+    
+
+class SecureFileDownloadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, filename):
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', filename)
+        if os.path.exists(file_path):
+            return FileResponse(open(file_path, 'rb'), as_attachment=True)
+        raise Http404("File not found")
