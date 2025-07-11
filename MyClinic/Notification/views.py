@@ -27,6 +27,7 @@ class AdminNotificationViewSet(viewsets.ModelViewSet):
                                     "image1":f"{os.getenv('BASE_URL')}/notification/secure-image/{os.path.basename(notification.image.name)}" if notification.image else None,
 
                 })
+            print(patient, patient.firebase_registration_token)
             send_push_notification(
                 registration_token=patient.firebase_registration_token,
                 title=notification.title,
