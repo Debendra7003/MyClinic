@@ -24,7 +24,8 @@ urlpatterns = [
     path('ambulance/',include('AmbulanceAccess.urls')),
     path('patients/', include('Patients.urls')),
     path('labs/', include('Labs.urls')),
-    path('doctor/',include('DoctorAccess.urls'))
+    path('doctor/',include('DoctorAccess.urls')),
+    path('notification/',include('Notification.urls')),
     # path('core/', include('Core.urls')),
 ]
 

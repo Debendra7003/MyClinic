@@ -4,7 +4,7 @@ from django.conf import settings
 from datetime import datetime, timedelta
 from django.core.mail import send_mail
 
-def send_push_notification(registration_token, title, body, data=None):
+def send_push_notification(registration_token, title, body,image=None, data=None):
     """
     Send push notification to a specific device using Firebase Cloud Messaging (FCM).
     """
@@ -14,6 +14,7 @@ def send_push_notification(registration_token, title, body, data=None):
             notification=messaging.Notification(
                 title=title,
                 body=body,
+                image=image,
             ),
             data={
         "title": title,
