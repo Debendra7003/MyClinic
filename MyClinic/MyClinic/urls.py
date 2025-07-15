@@ -26,6 +26,7 @@ urlpatterns = [
     path('labs/', include('Labs.urls')),
     path('doctor/',include('DoctorAccess.urls')),
     path('notification/',include('Notification.urls')),
+    path('admin-analytics/', include('AdminAnalytics.urls')),
     # path('core/', include('Core.urls')),
 ]
 

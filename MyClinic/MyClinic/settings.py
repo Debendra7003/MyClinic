@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'DoctorAccess',
     'AmbulanceAccess',
     'Notification',
+    'AdminAnalytics',
 ]
 
 MIDDLEWARE = [
