@@ -80,14 +80,24 @@ class AdminCostingAnalyticsView(APIView):
                 appointment_filters = {'doctor_id': config.entity,
                                        'cancelled': False,
                                        'checked': True}
-                if start_date:
-                    appointment_filters['date_of_visit__gte'] = start_date
-                if end_date:
-                    appointment_filters['date_of_visit__lte'] = end_date
+                # if start_date:
+                #     appointment_filters['date_of_visit__gte'] = start_date
+                # if end_date:
+                #     appointment_filters['date_of_visit__lte'] = end_date
                 
-                appointments = DoctorAppointment.objects.filter(
-                    **appointment_filters
+                period_start = max(datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else config.effective_from,
+                                   config.effective_from
+                                   )
+                period_end = min(
+                    datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else (config.effective_to or date.today()),
+                    config.effective_to or date.today()
                 )
+
+                appointment_filters['date_of_visit__gte'] = period_start
+                appointment_filters['date_of_visit__lte'] = period_end
+
+                appointments = DoctorAppointment.objects.filter(**appointment_filters)
+
                 # appointments = DoctorAppointment.objects.filter(
                 #     doctor_id=config.entity,
                 #     date_of_visit__gte=start_date,
@@ -95,6 +105,7 @@ class AdminCostingAnalyticsView(APIView):
                 #     cancelled=False,
                 #     checked=True  # May be a problem if doctor dont click checked.(To hide from admin)
                 # )
+
                 count = appointments.count()
                 if config.costing_type == 'per_patient':
                     admin_income = (config.per_patient_amount or 0) * count
@@ -121,10 +132,21 @@ class AdminCostingAnalyticsView(APIView):
             elif config.entity_type == 'lab':
                 lab_filters = {'lab_profile__user': config.entity,
                                'status': 'COMPLETED'}
-                if start_date:
-                    lab_filters['scheduled_date__gte'] = start_date
-                if end_date:
-                    lab_filters['scheduled_date__lte'] = end_date
+                # if start_date:
+                #     lab_filters['scheduled_date__gte'] = start_date
+                # if end_date:
+                #     lab_filters['scheduled_date__lte'] = end_date
+
+                period_start = max(datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else config.effective_from,
+                                   config.effective_from
+                                   )
+                period_end = min(datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else (config.effective_to or date.today()),
+                                    config.effective_to or date.today()
+                                    )
+
+                lab_filters['scheduled_date__gte'] = period_start
+                lab_filters['scheduled_date__lte'] = period_end
+
                 lab_tests = LabTest.objects.filter(**lab_filters)
 
                 # lab_tests = LabTest.objects.filter(
