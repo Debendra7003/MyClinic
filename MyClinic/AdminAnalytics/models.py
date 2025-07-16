@@ -17,7 +17,7 @@ class CostingConfig(models.Model):
     costing_type = models.CharField(max_length=20, choices=COSTING_TYPE_CHOICES)
     per_patient_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     fixed_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    period = models.CharField(max_length=20, choices=[('monthly', 'Monthly'), ('weekly', 'Weekly'),('yearly','Yearly')], default='monthly')
+    period = models.CharField(max_length=20, choices=[('monthly', 'Monthly'), ('weekly', 'Weekly'),('yearly','Yearly')], blank=True, null=True)
     effective_from = models.DateField()
     effective_to = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
