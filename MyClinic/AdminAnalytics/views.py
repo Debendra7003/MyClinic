@@ -75,6 +75,11 @@ class AdminCostingAnalyticsView(APIView):
         configs = CostingConfig.objects.filter(**filters)
 
         results = []
+        total_admin_income = 0
+        total_doctor_income = 0
+        total_lab_income = 0
+        total_doctor_appointments = 0
+        total_lab_tests = 0
         for config in configs:
             if config.entity_type == 'doctor':
                 appointment_filters = {'doctor_id': config.entity,
@@ -114,6 +119,11 @@ class AdminCostingAnalyticsView(APIView):
                     admin_income = calculate_fixed_income(config, start_date, end_date)
                 else:
                     admin_income = 0
+
+                total_admin_income += admin_income
+                total_doctor_income += admin_income
+                total_doctor_appointments += count
+
                 results.append({
                     "entity_type": "doctor",
                     "entity_id": config.entity.user_id,
@@ -163,6 +173,10 @@ class AdminCostingAnalyticsView(APIView):
                     admin_income = calculate_fixed_income(config, start_date, end_date)
                 else:
                     admin_income = 0
+                total_admin_income += admin_income
+                total_lab_income += admin_income
+                total_lab_tests += count
+
                 results.append({
                     "entity_type": "lab",
                     "entity_id": config.entity.user_id,
@@ -178,7 +192,24 @@ class AdminCostingAnalyticsView(APIView):
                     "admin_income": str(admin_income),
                     "notes": config.notes,
                 })
-        return Response(results)
+        summary = {
+            "total_admin_income": str(total_admin_income),
+            "total_doctor_income": str(total_doctor_income),
+            "total_lab_income": str(total_lab_income),
+            "total_doctor_appointments": total_doctor_appointments,
+            "total_lab_tests": total_lab_tests,
+            "total_entities": configs.count(),
+            "total_doctors": configs.filter(entity_type='doctor').count(),
+            "total_labs": configs.filter(entity_type='lab').count(),
+        }
+        # results.insert(0, summary) 
+        # return Response(results)
+        return Response({
+            "results": {
+                "summary": summary,
+                "details": results
+            }
+        })
     
 
 class CostingConfigViewSet(viewsets.ModelViewSet):
