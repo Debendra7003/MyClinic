@@ -54,6 +54,24 @@ class AmbulanceByUserView(APIView):
             "inactive_count": inactive_ambulances.count()
         }, status=status.HTTP_200_OK)
     
+
+# ------------------------------------Ambulance Update --------------------------------------------------------
+class AmbulanceUpdateView(APIView):
+    permission_classes = [IsAuthenticated | IsAdmin]
+
+    def patch(self, request, ambulance_id, vehicle_number):
+        user = get_object_or_404(User, user_id=ambulance_id)
+        try:
+            ambulance = Ambulance.objects.get(ambulance_id=user, vehicle_number=vehicle_number)
+        except Ambulance.DoesNotExist:
+            return Response({"error": "Ambulance not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = AmbulanceSerializer(ambulance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Ambulance updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # ------------------------------------Get Active or Iactive Ambulance----------------------------
 class AmbulanceStatusFilterView(APIView):
     permission_classes = [IsAuthenticated]
