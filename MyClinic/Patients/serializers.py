@@ -31,7 +31,7 @@ class PatientAppointmentUpdateSerializer(serializers.ModelSerializer):
         fields = ['date_of_visit', 'visit_time', 'shift']
 
     def validate(self, data):
-        instance = self.getattr(self, 'instance', None)
+        instance = getattr(self, 'instance', None)
         doctor_id = instance.doctor_id if instance else None
         date_of_visit = data.get('date_of_visit')
         visit_time = data.get('visit_time')
