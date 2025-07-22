@@ -88,6 +88,8 @@ class LabTestSerializer(serializers.ModelSerializer):
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
         scheduled_minute_ist = round_to_minute(scheduled_date)
+        if scheduled_minute_ist and scheduled_minute_ist.tzinfo:
+            scheduled_minute_ist = scheduled_minute_ist.replace(tzinfo=None)
      
         print(f"Scheduled Minute: {scheduled_minute_ist}")
         print(f"Scheduled Date: {scheduled_date}")
