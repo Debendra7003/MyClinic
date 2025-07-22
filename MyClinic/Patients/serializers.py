@@ -30,6 +30,28 @@ class PatientAppointmentUpdateSerializer(serializers.ModelSerializer):
         model = DoctorAppointment
         fields = ['date_of_visit', 'visit_time', 'shift']
 
+    def validate(self, data):
+        instance = self.getattr(self, 'instance', None)
+        doctor_id = instance.doctor_id if instance else None
+        date_of_visit = data.get('date_of_visit')
+        visit_time = data.get('visit_time')
+        shift = data.get('shift')
+        conflict = DoctorAppointment.objects.filter(
+            doctor_id=doctor_id,
+            date_of_visit=date_of_visit,
+            shift=shift,
+            visit_time=visit_time,
+            cancelled=False
+        )
+        if instance:
+            conflict = conflict.exclude(pk=instance.pk)
+        if conflict.exists():
+            raise serializers.ValidationError(
+                {"visit_time": "This visit time is already booked for the selected shift and date."}
+            )
+        return data
+        
+
 # class AmbulanceRequestSerializer(serializers.ModelSerializer):
 #     patient_user_id = serializers.CharField(source='patient.user.user_id', read_only = True)
 #     class Meta:
