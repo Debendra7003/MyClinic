@@ -20,35 +20,87 @@ from rest_framework import status
 import os
 from django.http import Http404, FileResponse
 from django.conf import settings
+from django.utils import timezone
+import pytz
+from Labs.tasks import send_lab_test_reminder
+
+# def schedule_lab_test_notifications(lab_test):
+#     patient = lab_test.patient
+#     registration_token = patient.user.firebase_registration_token
+#     print(f"Registration_Token: {registration_token}")
+#     if registration_token:
+
+#         # 1 day before
+#         send_scheduled_push_notification(
+#             registration_token=registration_token,
+#             title="Lab Test Reminder",
+#             body=f"Your lab test for {lab_test.test_type} is scheduled tomorrow at {lab_test.scheduled_date}.",
+#             delivery_time=lab_test.scheduled_date - timedelta(days=1),
+#         )
+
+#         # 2 hours before
+#         send_scheduled_push_notification(
+#             registration_token=registration_token,
+#             title="Lab Test Reminder",
+#             body=f"Your lab test for {lab_test.test_type} is scheduled in 2 hours at {lab_test.scheduled_date}.",
+#             delivery_time=lab_test.scheduled_date - timedelta(hours=2),
+#         )
+
+#         # 1 hour before
+#         send_scheduled_push_notification(
+#             registration_token=registration_token,
+#             title="Lab Test Reminder",
+#             body=f"Your lab test for {lab_test.test_type} is scheduled in 1 hour at {lab_test.scheduled_date}.",
+#             delivery_time=lab_test.scheduled_date - timedelta(hours=1),
+#         )
+
+
 def schedule_lab_test_notifications(lab_test):
     patient = lab_test.patient
-    registration_token = patient.user.firebase_registration_token
+    registration_token = getattr(patient.user, "firebase_registration_token", None)
     print(f"Registration_Token: {registration_token}")
-    if registration_token:
+    if not registration_token:
+        return
 
-        # 1 day before
-        send_scheduled_push_notification(
-            registration_token=registration_token,
-            title="Lab Test Reminder",
-            body=f"Your lab test for {lab_test.test_type} is scheduled tomorrow at {lab_test.scheduled_date}.",
-            delivery_time=lab_test.scheduled_date - timedelta(days=1),
-        )
+    scheduled_date = lab_test.scheduled_date
+    now = timezone.now()
+    local_time = scheduled_date.astimezone(pytz.timezone('Asia/Kolkata'))
+    formatted_time = local_time.strftime("%d %b %-I %M %p")
 
-        # 2 hours before
-        send_scheduled_push_notification(
-            registration_token=registration_token,
-            title="Lab Test Reminder",
-            body=f"Your lab test for {lab_test.test_type} is scheduled in 2 hours at {lab_test.scheduled_date}.",
-            delivery_time=lab_test.scheduled_date - timedelta(hours=2),
-        )
+    print("Scheduled Date:", scheduled_date)
+    print("Formatted Time:", formatted_time)
+    print("Local Time:", local_time)
 
-        # 1 hour before
-        send_scheduled_push_notification(
-            registration_token=registration_token,
-            title="Lab Test Reminder",
-            body=f"Your lab test for {lab_test.test_type} is scheduled in 1 hour at {lab_test.scheduled_date}.",
-            delivery_time=lab_test.scheduled_date - timedelta(hours=1),
-        )
+    reminders = [
+        {
+            "title": "Lab Test Reminder",
+            "body": f"Your lab test for {lab_test.test_type} is scheduled tomorrow at {formatted_time}.",
+            "eta": scheduled_date - timedelta(days=1),
+        },
+        {
+            "title": "Lab Test Reminder",
+            "body": f"Your lab test for {lab_test.test_type} is scheduled in 2 hours at {formatted_time}.",
+            "eta": scheduled_date - timedelta(hours=2),
+        },
+        {
+            "title": "Lab Test Reminder",
+            "body": f"Your lab test for {lab_test.test_type} is scheduled in 1 hour at {formatted_time}.",
+            "eta": scheduled_date - timedelta(hours=1),
+        },
+    ]
+
+    for reminder in reminders:
+        # Only schedule if eta is in the future
+        if reminder["eta"] > now:
+            send_lab_test_reminder.apply_async(
+                args=[
+                    registration_token,
+                    reminder["title"],
+                    reminder["body"],
+                    None
+                ],
+                eta=reminder["eta"]
+            )
 
 class LabProfileViewSet(viewsets.ModelViewSet):
     queryset = LabProfile.objects.all()
