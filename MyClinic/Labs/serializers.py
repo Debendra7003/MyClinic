@@ -1,24 +1,6 @@
 from rest_framework import serializers
 from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
 from Patients.serializers import PatientProfileSerializer
-from django.db.models.functions import TruncMinute
-from django.utils.timezone import is_naive, make_aware
-from datetime import datetime, timezone
-from django.conf import settings
-import pytz
-
-def get_ist():
-    return pytz.timezone(getattr(settings, "TIME_ZONE", "Asia/Kolkata"))
-
-def round_to_minute(dt):
-    if dt is None:
-        return None
-    if is_naive(dt):
-        dt = make_aware(dt, timezone=get_ist())
-    dt = dt.astimezone(get_ist())  # Convert to IST first
-    dt = dt.replace(second=0, microsecond=0)  # Truncate to minute
-    return dt.astimezone(timezone.utc)  # Convert to UTC for DB comparison
-
 
 
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
@@ -83,47 +65,21 @@ class LabTestSerializer(serializers.ModelSerializer):
         model = LabTest
         fields = ['id', 'patient','patient_name', 'lab_profile','lab_profile_code', 'lab_profile_name', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
-    # def round_to_minute(self,dt):
-    #     return dt.replace(second=0, microsecond=0) if dt else None
-   
     def validate(self, data):
         request = self.context['request']
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
-        # scheduled_minute_ist = round_to_minute(scheduled_date)
-        # if scheduled_minute_ist and scheduled_minute_ist.tzinfo:
-        #     scheduled_minute_ist = scheduled_minute_ist.replace(tzinfo=None)
-        scheduled_minute_utc = round_to_minute(scheduled_date.astimezone(timezone.utc))
-
-     
-        print(f"Scheduled Minute: {scheduled_minute_utc}")
-        print(f"Scheduled Date: {scheduled_date}")
 
         if lab_profile and scheduled_date:
-            # conflict = LabTest.objects.filter(
-            #     lab_profile=lab_profile,
-            #     scheduled_date=scheduled_date
-            # )
-            all_tests = LabTest.objects.filter(
-                    lab_profile=lab_profile,
-                    scheduled_date__date=scheduled_minute_utc.date(),
-                    scheduled_date__hour=scheduled_minute_utc.hour,
-                    scheduled_date__minute=scheduled_minute_utc.minute)
-            print("All tests at this minute:", list(all_tests.values('id', 'scheduled_date', 'status')))
-            conflict = LabTest.objects.annotate(
-            scheduled_minute=TruncMinute('scheduled_date')
-                ).filter(
-                    lab_profile=lab_profile,
-                    scheduled_minute=scheduled_minute_utc
-                    )
-            
+            conflict = LabTest.objects.filter(
+                lab_profile=lab_profile,
+                scheduled_date=scheduled_date
+            )
             # Exclude self if updating
             if self.instance:
                 conflict = conflict.exclude(pk=self.instance.pk)
             # Only block if not cancelled
             conflict = conflict.exclude(status='CANCELLED')
-            print("Conflicting queryset:", conflict.query)
-            print("Conflicting count:", conflict.count())
             if conflict.exists():
                 raise serializers.ValidationError(
                     {"scheduled_date": "This slot is already booked for this lab."}
