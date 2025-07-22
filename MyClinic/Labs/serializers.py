@@ -15,8 +15,10 @@ def round_to_minute(dt):
         return None
     if is_naive(dt):
         dt = make_aware(dt, timezone=get_ist())
-    dt = dt.astimezone(timezone.utc)
-    return dt.replace(second=0, microsecond=0)
+    dt = dt.astimezone(get_ist())  # Convert to IST first
+    dt = dt.replace(second=0, microsecond=0)  # Truncate to minute
+    return dt.astimezone(timezone.utc)  # Convert to UTC for DB comparison
+
 
 
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
