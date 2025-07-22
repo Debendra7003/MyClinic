@@ -4,7 +4,19 @@ from Patients.serializers import PatientProfileSerializer
 from django.db.models.functions import TruncMinute
 from django.utils.timezone import is_naive, make_aware
 from datetime import datetime, timezone
+from django.conf import settings
+import pytz
 
+def get_ist():
+    return pytz.timezone(getattr(settings, "TIME_ZONE", "Asia/Kolkata"))
+
+def round_to_minute(self, dt):
+    if dt is None:
+        return None
+    dt = dt.replace(second=0, microsecond=0)
+    if is_naive(dt):
+        dt = make_aware(dt, timezone=get_ist())
+    return dt.astimezone(get_ist())
 
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,28 +82,14 @@ class LabTestSerializer(serializers.ModelSerializer):
     
     # def round_to_minute(self,dt):
     #     return dt.replace(second=0, microsecond=0) if dt else None
-    def round_to_minute(self, dt):
-        if dt is None:
-            return None
-        dt = dt.replace(second=0, microsecond=0)
-        # Ensure timezone-aware for comparison with DB
-        if is_naive(dt):
-            from django.conf import settings
-            import pytz
-            tz = pytz.timezone(settings.TIME_ZONE)
-            dt = make_aware(dt, timezone=tz)
-        return dt
-
+   
     def validate(self, data):
         request = self.context['request']
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
-        scheduled_minute = self.round_to_minute(scheduled_date)
-        if scheduled_minute and scheduled_minute.tzinfo:
-            scheduled_minute_utc = scheduled_minute.astimezone(timezone.utc)
-        else:
-            scheduled_minute_utc = scheduled_minute
-        print(f"Scheduled Minute: {scheduled_minute}")
+        scheduled_minute_ist = round_to_minute(scheduled_date)
+     
+        print(f"Scheduled Minute: {scheduled_minute_ist}")
         print(f"Scheduled Date: {scheduled_date}")
 
         if lab_profile and scheduled_date:
@@ -101,15 +99,15 @@ class LabTestSerializer(serializers.ModelSerializer):
             # )
             all_tests = LabTest.objects.filter(
                     lab_profile=lab_profile,
-                    scheduled_date__date=scheduled_minute.date(),
-                    scheduled_date__hour=scheduled_minute.hour,
-                    scheduled_date__minute=scheduled_minute.minute)
+                    scheduled_date__date=scheduled_minute_ist.date(),
+                    scheduled_date__hour=scheduled_minute_ist.hour,
+                    scheduled_date__minute=scheduled_minute_ist.minute)
             print("All tests at this minute:", list(all_tests.values('id', 'scheduled_date', 'status')))
             conflict = LabTest.objects.annotate(
             scheduled_minute=TruncMinute('scheduled_date')
                 ).filter(
                     lab_profile=lab_profile,
-                    scheduled_minute=scheduled_minute_utc
+                    scheduled_minute=scheduled_minute_ist
                     )
             
             # Exclude self if updating
