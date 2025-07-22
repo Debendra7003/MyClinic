@@ -10,7 +10,7 @@ import pytz
 def get_ist():
     return pytz.timezone(getattr(settings, "TIME_ZONE", "Asia/Kolkata"))
 
-def round_to_minute(self, dt):
+def round_to_minute(dt):
     if dt is None:
         return None
     dt = dt.replace(second=0, microsecond=0)
