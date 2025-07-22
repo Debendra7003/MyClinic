@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
 from Patients.serializers import PatientProfileSerializer
 from django.db.models.functions import TruncMinute
+from django.utils.timezone import is_naive, make_aware
+from datetime import datetime
 
 
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
@@ -66,14 +68,27 @@ class LabTestSerializer(serializers.ModelSerializer):
         model = LabTest
         fields = ['id', 'patient','patient_name', 'lab_profile','lab_profile_code', 'lab_profile_name', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
-    def round_to_minute(self,dt):
-        return dt.replace(second=0, microsecond=0) if dt else None
+    # def round_to_minute(self,dt):
+    #     return dt.replace(second=0, microsecond=0) if dt else None
+    def round_to_minute(self, dt):
+        if dt is None:
+            return None
+        dt = dt.replace(second=0, microsecond=0)
+        # Ensure timezone-aware for comparison with DB
+        if is_naive(dt):
+            from django.conf import settings
+            import pytz
+            tz = pytz.timezone(settings.TIME_ZONE)
+            dt = make_aware(dt, timezone=tz)
+        return dt
 
     def validate(self, data):
         request = self.context['request']
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
         scheduled_minute = self.round_to_minute(scheduled_date)
+        print(f"Scheduled Minute: {scheduled_minute}")
+        print(f"Scheduled Date: {scheduled_date}")
 
         if lab_profile and scheduled_date:
             # conflict = LabTest.objects.filter(
