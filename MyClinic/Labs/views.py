@@ -65,7 +65,10 @@ def schedule_lab_test_notifications(lab_test):
     scheduled_date = lab_test.scheduled_date
     now = timezone.now()
     local_time = scheduled_date.astimezone(pytz.timezone('Asia/Kolkata'))
-    formatted_time = local_time.strftime("%d %b %-I %M %p")
+    formatted_time = local_time.strftime("%a, %d %b at %-I:%M %p")  # Linux/macOS
+# Use "%a, %d %b at %#I:%M %p" on Windows
+
+    # formatted_time = local_time.strftime("%d %b %-I %M %p")
 
     print("Scheduled Date:", scheduled_date)
     print("Formatted Time:", formatted_time)
