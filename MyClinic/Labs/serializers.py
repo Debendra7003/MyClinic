@@ -69,21 +69,25 @@ class LabTestSerializer(serializers.ModelSerializer):
         request = self.context['request']
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
-
-        if lab_profile and scheduled_date:
-            conflict = LabTest.objects.filter(
+        is_create = request.method == 'POST'
+        is_update = request.method in ['PUT', 'PATCH']
+        changing_lab_profile = 'lab_profile' in data
+        changing_scheduled_date = 'scheduled_date' in data
+        if is_create or changing_lab_profile or changing_scheduled_date:
+            if lab_profile and scheduled_date:
+                conflict = LabTest.objects.filter(
                 lab_profile=lab_profile,
                 scheduled_date=scheduled_date
-            )
+                    )
             # Exclude self if updating
-            if self.instance:
-                conflict = conflict.exclude(pk=self.instance.pk)
+                if self.instance:
+                    conflict = conflict.exclude(pk=self.instance.pk)
             # Only block if not cancelled
-            conflict = conflict.exclude(status='CANCELLED')
-            if conflict.exists():
-                raise serializers.ValidationError(
-                    {"scheduled_date": "This slot is already booked for this lab."}
-                )
+                conflict = conflict.exclude(status='CANCELLED')
+                if conflict.exists():
+                    raise serializers.ValidationError(
+                        {"scheduled_date": "This slot is already booked for this lab."}
+                    )
 
         if request.method == 'POST':  # Only restrict creation
             if request.user.role != 'patient':
