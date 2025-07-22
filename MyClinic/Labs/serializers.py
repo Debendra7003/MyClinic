@@ -95,18 +95,26 @@ class LabTestSerializer(serializers.ModelSerializer):
             #     lab_profile=lab_profile,
             #     scheduled_date=scheduled_date
             # )
+            all_tests = LabTest.objects.filter(
+                    lab_profile=lab_profile,
+                    scheduled_date__date=scheduled_minute.date(),
+                    scheduled_date__hour=scheduled_minute.hour,
+                    scheduled_date__minute=scheduled_minute.minute)
+            print("All tests at this minute:", list(all_tests.values('id', 'scheduled_date', 'status')))
             conflict = LabTest.objects.annotate(
             scheduled_minute=TruncMinute('scheduled_date')
                 ).filter(
                     lab_profile=lab_profile,
                     scheduled_minute=scheduled_minute
                     )
-
+            
             # Exclude self if updating
             if self.instance:
                 conflict = conflict.exclude(pk=self.instance.pk)
             # Only block if not cancelled
             conflict = conflict.exclude(status='CANCELLED')
+            print("Conflicting queryset:", conflict.query)
+            print("Conflicting count:", conflict.count())
             if conflict.exists():
                 raise serializers.ValidationError(
                     {"scheduled_date": "This slot is already booked for this lab."}
