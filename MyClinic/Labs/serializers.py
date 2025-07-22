@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
 from Patients.serializers import PatientProfileSerializer
+from django.db.models.functions import TruncMinute
 
 
 class SimpleLabProfileSerializer(serializers.ModelSerializer):
@@ -65,16 +66,27 @@ class LabTestSerializer(serializers.ModelSerializer):
         model = LabTest
         fields = ['id', 'patient','patient_name', 'lab_profile','lab_profile_code', 'lab_profile_name', 'test_type', 'scheduled_date', 'registration_number' ,'status', 'created_at', 'reports']
     
+    def round_to_minute(self,dt):
+        return dt.replace(second=0, microsecond=0) if dt else None
+
     def validate(self, data):
         request = self.context['request']
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
+        scheduled_minute = self.round_to_minute(scheduled_date)
 
         if lab_profile and scheduled_date:
-            conflict = LabTest.objects.filter(
-                lab_profile=lab_profile,
-                scheduled_date=scheduled_date
-            )
+            # conflict = LabTest.objects.filter(
+            #     lab_profile=lab_profile,
+            #     scheduled_date=scheduled_date
+            # )
+            conflict = LabTest.objects.annotate(
+            scheduled_minute=TruncMinute('scheduled_date')
+                ).filter(
+                    lab_profile=lab_profile,
+                    scheduled_minute=scheduled_minute
+                    )
+
             # Exclude self if updating
             if self.instance:
                 conflict = conflict.exclude(pk=self.instance.pk)
