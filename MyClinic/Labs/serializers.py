@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import LabTest, LabReport, LabProfile, LabType, LabAvailability
 from Patients.serializers import PatientProfileSerializer
 from django.db.models.functions import TruncMinute
-from django.utils.timezone import is_naive, make_aware
+from django.utils.timezone import is_naive, make_aware, utc
 from datetime import datetime
 
 
@@ -87,6 +87,10 @@ class LabTestSerializer(serializers.ModelSerializer):
         lab_profile = data.get('lab_profile') or getattr(self.instance, 'lab_profile', None)
         scheduled_date = data.get('scheduled_date') or getattr(self.instance, 'scheduled_date', None)
         scheduled_minute = self.round_to_minute(scheduled_date)
+        if scheduled_minute and scheduled_minute.tzinfo:
+            scheduled_minute_utc = scheduled_minute.astimezone(utc)
+        else:
+            scheduled_minute_utc = scheduled_minute
         print(f"Scheduled Minute: {scheduled_minute}")
         print(f"Scheduled Date: {scheduled_date}")
 
@@ -105,7 +109,7 @@ class LabTestSerializer(serializers.ModelSerializer):
             scheduled_minute=TruncMinute('scheduled_date')
                 ).filter(
                     lab_profile=lab_profile,
-                    scheduled_minute=scheduled_minute
+                    scheduled_minute=scheduled_minute_utc
                     )
             
             # Exclude self if updating
