@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DoctorRegistration,DoctorAppointment, DoctorAvailability
+from .models import DoctorRegistration,DoctorAppointment, DoctorAvailability, Specialist
 from LoginAccess.models import User
 
 
@@ -103,3 +103,9 @@ class DoctorAvailabilitySerializer(serializers.ModelSerializer):
         model = DoctorAvailability
         fields = ['id', 'doctor', 'date','start_time','end_time','available', 'shift', 'created_at']
         read_only_fields = ['id', 'created_at','doctor']
+
+class SpecialistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specialist
+        fields = '__all__'
+        read_only_fields = ['id']

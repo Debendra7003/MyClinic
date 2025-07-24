@@ -1,11 +1,11 @@
 from django.urls import path, include
 from .views import (DoctorRegistrationView, DoctorProfileAPIView, DoctorSpecialist,DoctorAppointmentView, AppointmentCancelled,
-GetAppointment, DoctorAvailabilityViewSet, AppointmentChecked, NotifyShiftDelay)
+GetAppointment, DoctorAvailabilityViewSet, AppointmentChecked, NotifyShiftDelay, SpecialistViewSet)
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'availability', DoctorAvailabilityViewSet, basename='doctor-availability')
-
+router.register(r'doctor-specialist', SpecialistViewSet, basename='specialist')
 urlpatterns = [
     path('register/', DoctorRegistrationView.as_view(), name='doctor-register'),
     path('get_all/', DoctorProfileAPIView.as_view(), name='get-all-doctors'),             # GET all

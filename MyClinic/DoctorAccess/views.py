@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .serializers import DoctorRegistrationSerializer,DoctorAppointmentSerializer, DoctorAvailabilitySerializer, AppointmentCheckedSerializer, AppointmentCancelledSerializer
-from .models import DoctorRegistration, DoctorAppointment, DoctorAvailability
+from .serializers import DoctorRegistrationSerializer,DoctorAppointmentSerializer, DoctorAvailabilitySerializer, AppointmentCheckedSerializer, AppointmentCancelledSerializer, SpecialistSerializer
+from .models import DoctorRegistration, DoctorAppointment, DoctorAvailability, Specialist
 from LoginAccess.models import User
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -460,3 +460,10 @@ class NotifyShiftDelay(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class SpecialistViewSet(viewsets.ModelViewSet):
+    queryset = Specialist.objects.all()
+    serializer_class = SpecialistSerializer
+    permission_classes = [IsAdmin | IsDoctor | IsReadOnly]
