@@ -6,16 +6,18 @@ from LoginAccess.models import User
 class DoctorRegistrationSerializer(serializers.ModelSerializer):
     doctor = serializers.CharField(write_only=True)  # accepts "XOP7"
     doctor_user_id = serializers.SerializerMethodField(read_only=True)  # returns it back in response
-
+    doctor_active = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = DoctorRegistration
         fields = [
-            'doctor', 'doctor_user_id', 'doctor_name', 'specialist', 'license_number',
+            'doctor', 'doctor_user_id', 'doctor_active', 'doctor_name', 'specialist', 'license_number',
             'clinic_name', 'clinic_address','location', 'experience', 'status', 'profile_image'
         ]
         read_only_fields = ['status']
     def get_doctor_user_id(self, obj):
         return obj.doctor.user_id
+    def get_doctor_active(self, obj):
+        return obj.doctor.is_active
 
     def create(self, validated_data):
         doctor_user_id = validated_data.pop('doctor')
